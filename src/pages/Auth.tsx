@@ -147,11 +147,11 @@ const Auth = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary/30 px-4">
       <Card className="w-full max-w-md animate-fade-in border-border/50 shadow-card">
-        <CardHeader className="space-y-4 text-center">
+        <CardHeader className="space-y-6 text-center">
           <div className="flex justify-center">
-            <Logo />
+            <Logo size="lg" />
           </div>
-          <div>
+          <div className="space-y-2">
             <CardTitle className="text-2xl font-bold text-foreground">
               {mode === "login" && t.auth.welcomeBack}
               {mode === "signup" && t.auth.createAccount}

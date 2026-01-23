@@ -1,9 +1,11 @@
-import { Menu, LogOut, Globe } from "lucide-react";
+import { Menu, LogOut, Globe, Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useTheme } from "@/hooks/useTheme";
 import { Language } from "@/i18n/translations";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +24,7 @@ import {
 export const AppHeader = () => {
   const { profile, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -45,11 +48,25 @@ export const AppHeader = () => {
         </SidebarTrigger>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Theme Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="h-9 w-9 text-muted-foreground hover:text-foreground"
+        >
+          {theme === "light" ? (
+            <Moon className="h-5 w-5" />
+          ) : (
+            <Sun className="h-5 w-5" />
+          )}
+        </Button>
+
         {/* Language Selector */}
         <Select value={language} onValueChange={handleLanguageChange}>
-          <SelectTrigger className="w-[100px] border-border">
-            <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
+          <SelectTrigger className="w-[80px] sm:w-[100px] border-border">
+            <Globe className="mr-1 sm:mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

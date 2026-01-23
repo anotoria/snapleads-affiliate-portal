@@ -42,7 +42,7 @@ export const AppSidebar = () => {
       collapsible="icon"
     >
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        <Logo collapsed={collapsed} />
+        <Logo collapsed={collapsed} size={collapsed ? "sm" : "md"} />
       </SidebarHeader>
 
       <SidebarContent className="p-2">
