@@ -190,8 +190,9 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center bg-secondary/30 px-4">
       <Card className="w-full max-w-md animate-fade-in border-border/50 shadow-card">
         <CardHeader className="space-y-6 text-center">
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-2">
             <Logo size="lg" />
+            <span className="text-sm text-muted-foreground">{t.common.affiliatePortal}</span>
           </div>
           <div className="space-y-2">
             <CardTitle className="text-2xl font-bold text-foreground">

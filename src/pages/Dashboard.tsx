@@ -5,7 +5,8 @@ import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { AffiliateLinkCard } from "@/components/dashboard/AffiliateLinkCard";
-import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
+import { LeadsPerformanceChart } from "@/components/dashboard/LeadsPerformanceChart";
+import { EarningsPerformanceChart } from "@/components/dashboard/EarningsPerformanceChart";
 import { PageTransition } from "@/components/animations/PageTransition";
 
 const Dashboard = () => {
@@ -60,8 +61,11 @@ const Dashboard = () => {
             />
           </div>
 
-          {/* Performance Chart */}
-          <PerformanceChart />
+          {/* Performance Charts - stacked vertically */}
+          <div className="flex flex-col gap-6">
+            <LeadsPerformanceChart />
+            <EarningsPerformanceChart />
+          </div>
 
           {/* Affiliate Link Card */}
           <AffiliateLinkCard />
