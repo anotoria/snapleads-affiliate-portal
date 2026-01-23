@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
 import { DollarSign, Users, MousePointerClick } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { AffiliateLinkCard } from "@/components/dashboard/AffiliateLinkCard";
@@ -11,13 +11,7 @@ import { PageTransition } from "@/components/animations/PageTransition";
 const Dashboard = () => {
   const { profile } = useAuth();
   const { t } = useLanguage();
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Simulate data loading
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  const { data: metrics, isLoading } = useDashboardMetrics();
 
   return (
     <AppLayout>
@@ -37,32 +31,37 @@ const Dashboard = () => {
           <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             <MetricCard
               title={t.dashboard.totalEarnings}
-              value="$1,234.56"
+              value={`$${(metrics?.totalEarnings ?? 0).toFixed(2)}`}
               icon={<DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-success" />}
               isLoading={isLoading}
-              trend={{ value: 12.5, isPositive: true }}
+              trend={{ 
+                value: Math.abs(metrics?.earningsChange ?? 0), 
+                isPositive: (metrics?.earningsChange ?? 0) >= 0 
+              }}
               delay={0}
             />
             <MetricCard
               title={t.dashboard.activeLeads}
-              value="48"
+              value={String(metrics?.activeLeads ?? 0)}
               icon={<Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />}
               isLoading={isLoading}
-              trend={{ value: 8.2, isPositive: true }}
+              trend={{ 
+                value: Math.abs(metrics?.leadsChange ?? 0), 
+                isPositive: (metrics?.leadsChange ?? 0) >= 0 
+              }}
               delay={0.1}
             />
             <MetricCard
               title={t.dashboard.clickCount}
-              value="1,892"
+              value={String(metrics?.totalLeads ?? 0)}
               icon={<MousePointerClick className="h-5 w-5 sm:h-6 sm:w-6 text-brand-magenta" />}
               isLoading={isLoading}
-              trend={{ value: 3.1, isPositive: false }}
               delay={0.2}
             />
           </div>
 
           {/* Performance Chart */}
-          <PerformanceChart isLoading={isLoading} />
+          <PerformanceChart />
 
           {/* Affiliate Link Card */}
           <AffiliateLinkCard />
