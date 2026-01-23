@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { motion } from "framer-motion";
 import { Wallet } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Button } from "@/components/ui/button";
@@ -64,63 +65,108 @@ export const PayoutsHistory = () => {
   };
   
   return (
-    <Card className="border-border/50 shadow-card">
-      <CardHeader>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-              <Wallet className="h-5 w-5 text-success" />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.3 }}
+      whileHover={{ y: -2 }}
+    >
+      <Card className="border-border/50 shadow-card">
+        <CardHeader className="px-4 sm:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <motion.div 
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <Wallet className="h-5 w-5 text-success" />
+              </motion.div>
+              <div>
+                <CardTitle className="text-base sm:text-lg">{t.payouts.payoutHistory}</CardTitle>
+                <CardDescription className="text-sm">{t.payouts.minimumPayout}</CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle>{t.payouts.payoutHistory}</CardTitle>
-              <CardDescription>{t.payouts.minimumPayout}</CardDescription>
-            </div>
+            
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button className="bg-brand-gradient hover:opacity-90 w-full sm:w-auto">
+                {t.payouts.requestPayout}
+              </Button>
+            </motion.div>
           </div>
-          
-          <Button className="bg-brand-gradient hover:opacity-90">
-            {t.payouts.requestPayout}
-          </Button>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        {payouts.length === 0 ? (
-          <div className="flex min-h-[200px] items-center justify-center rounded-lg border-2 border-dashed border-border bg-accent/30">
-            <div className="text-center">
-              <Wallet className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <p className="mt-4 text-lg font-medium text-muted-foreground">
-                {t.payouts.noPayouts}
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground/70">
-                {t.payouts.noPayoutsDescription}
-              </p>
+        </CardHeader>
+        
+        <CardContent className="px-4 sm:px-6">
+          {payouts.length === 0 ? (
+            <div className="flex min-h-[150px] sm:min-h-[200px] items-center justify-center rounded-lg border-2 border-dashed border-border bg-accent/30">
+              <div className="text-center px-4">
+                <Wallet className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
+                <p className="mt-4 text-base sm:text-lg font-medium text-muted-foreground">
+                  {t.payouts.noPayouts}
+                </p>
+                <p className="mt-2 text-xs sm:text-sm text-muted-foreground/70">
+                  {t.payouts.noPayoutsDescription}
+                </p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-accent/50">
-                  <TableHead className="font-semibold">{t.payouts.date}</TableHead>
-                  <TableHead className="font-semibold">{t.payouts.amount}</TableHead>
-                  <TableHead className="font-semibold">{t.payouts.method}</TableHead>
-                  <TableHead className="font-semibold">{t.payouts.status}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payouts.map((payout) => (
-                  <TableRow key={payout.id} className="hover:bg-accent/30">
-                    <TableCell className="text-muted-foreground">{payout.date}</TableCell>
-                    <TableCell className="font-medium">${payout.amount.toFixed(2)}</TableCell>
-                    <TableCell className="text-muted-foreground">{payout.method}</TableCell>
-                    <TableCell>{getStatusBadge(payout.status)}</TableCell>
-                  </TableRow>
+          ) : (
+            <>
+              {/* Mobile Cards View */}
+              <div className="block sm:hidden space-y-3">
+                {payouts.map((payout, index) => (
+                  <motion.div
+                    key={payout.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="rounded-lg border border-border bg-card p-4 space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-foreground">${payout.amount.toFixed(2)}</p>
+                      {getStatusBadge(payout.status)}
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{payout.method}</span>
+                      <span>{payout.date}</span>
+                    </div>
+                  </motion.div>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden sm:block rounded-lg border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-accent/50">
+                        <TableHead className="font-semibold">{t.payouts.date}</TableHead>
+                        <TableHead className="font-semibold">{t.payouts.amount}</TableHead>
+                        <TableHead className="font-semibold">{t.payouts.method}</TableHead>
+                        <TableHead className="font-semibold">{t.payouts.status}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {payouts.map((payout, index) => (
+                        <motion.tr
+                          key={payout.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: index * 0.03 }}
+                          className="hover:bg-accent/30 border-b border-border last:border-0"
+                        >
+                          <TableCell className="text-muted-foreground">{payout.date}</TableCell>
+                          <TableCell className="font-medium">${payout.amount.toFixed(2)}</TableCell>
+                          <TableCell className="text-muted-foreground">{payout.method}</TableCell>
+                          <TableCell>{getStatusBadge(payout.status)}</TableCell>
+                        </motion.tr>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
