@@ -40,6 +40,7 @@ interface UserData {
   password?: string;
   full_name?: string;
   affiliate_code?: string;
+  affiliate_url?: string;
 }
 
 const DEFAULT_TEMP_PASSWORD = "TempPass123!";
@@ -117,6 +118,7 @@ Deno.serve(async (req) => {
         password: data!.password ? String(data!.password) : undefined,
         full_name: data!.full_name ? String(data!.full_name) : undefined,
         affiliate_code: data!.affiliate_code ? String(data!.affiliate_code) : undefined,
+        affiliate_url: data!.affiliate_url ? String(data!.affiliate_url) : undefined,
       };
       const result = await handleUserOperation(supabase, action, userData, match);
       return new Response(
@@ -446,8 +448,13 @@ async function handleUserOperation(
         profileUpdate.full_name = sanitizeString(data.full_name, 100);
       }
       
-      if (data.affiliate_code) {
-        profileUpdate.affiliate_code = sanitizeString(data.affiliate_code, 50);
+      // Support both affiliate_code and affiliate_url (affiliate_url takes precedence)
+      if (data.affiliate_url) {
+        // Extract affiliate code from URL or use the full URL as the code
+        const affiliateCode = data.affiliate_url.replace(/^https?:\/\/(www\.)?snapleads\.com\/?/, '').replace(/^\//, '');
+        profileUpdate.affiliate_code = sanitizeString(affiliateCode || data.affiliate_url, 255);
+      } else if (data.affiliate_code) {
+        profileUpdate.affiliate_code = sanitizeString(data.affiliate_code, 255);
       }
 
       const { error: profileError } = await supabase
@@ -527,8 +534,13 @@ async function handleUserOperation(
       profileUpdate.full_name = sanitizeString(data.full_name, 100);
     }
     
-    if (data.affiliate_code) {
-      profileUpdate.affiliate_code = sanitizeString(data.affiliate_code, 50);
+    // Support both affiliate_code and affiliate_url (affiliate_url takes precedence)
+    if (data.affiliate_url) {
+      // Extract affiliate code from URL or use the full URL as the code
+      const affiliateCode = data.affiliate_url.replace(/^https?:\/\/(www\.)?snapleads\.com\/?/, '').replace(/^\//, '');
+      profileUpdate.affiliate_code = sanitizeString(affiliateCode || data.affiliate_url, 255);
+    } else if (data.affiliate_code) {
+      profileUpdate.affiliate_code = sanitizeString(data.affiliate_code, 255);
     }
 
     if (Object.keys(profileUpdate).length > 0) {

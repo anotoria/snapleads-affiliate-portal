@@ -21,10 +21,11 @@ export const PerformanceChart = () => {
   const { t } = useLanguage();
   const { data: rawData = [], isLoading } = usePerformanceData();
 
-  // Format data for display
+  // Format data for display - scale leads to match earnings proportion (1 lead = 1000 earnings)
   const data = rawData.map((item) => ({
     ...item,
     date: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    leadsScaled: item.leads * 1000, // Scale leads to be proportional with earnings
   }));
 
   if (isLoading) {
@@ -114,7 +115,8 @@ export const PerformanceChart = () => {
               />
               <Area
                 type="monotone"
-                dataKey="leads"
+                dataKey="leadsScaled"
+                name={t.dashboard.leads}
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
                 fill="url(#fillLeads)"

@@ -52,8 +52,8 @@ const Dashboard = () => {
               delay={0.1}
             />
             <MetricCard
-              title={t.dashboard.clickCount}
-              value={String(metrics?.totalLeads ?? 0)}
+              title={t.dashboard.inactiveLeads}
+              value={String(metrics?.inactiveLeads ?? 0)}
               icon={<MousePointerClick className="h-5 w-5 sm:h-6 sm:w-6 text-brand-magenta" />}
               isLoading={isLoading}
               delay={0.2}

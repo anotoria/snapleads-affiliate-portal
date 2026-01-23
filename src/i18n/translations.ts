@@ -25,7 +25,7 @@ type DashboardTranslations = {
   welcomeMessage: string;
   totalEarnings: string;
   activeLeads: string;
-  clickCount: string;
+  inactiveLeads: string;
   fromLastMonth: string;
   yourAffiliateLink: string;
   shareToEarn: string;
@@ -164,7 +164,7 @@ export const translations = {
       welcomeMessage: "Here's what's happening with your affiliate account today.",
       totalEarnings: "Total Earnings",
       activeLeads: "Active Leads",
-      clickCount: "Click Count",
+      inactiveLeads: "Inactive Leads",
       fromLastMonth: "from last month",
       yourAffiliateLink: "Your Affiliate Link",
       shareToEarn: "Share this link to earn commissions",
@@ -294,7 +294,7 @@ export const translations = {
       welcomeMessage: "Veja o que está acontecendo com sua conta de afiliado hoje.",
       totalEarnings: "Ganhos Totais",
       activeLeads: "Leads Ativos",
-      clickCount: "Total de Cliques",
+      inactiveLeads: "Leads Inativos",
       fromLastMonth: "em relação ao mês passado",
       yourAffiliateLink: "Seu Link de Afiliado",
       shareToEarn: "Compartilhe este link para ganhar comissões",
@@ -424,7 +424,7 @@ export const translations = {
       welcomeMessage: "Esto es lo que está pasando con tu cuenta de afiliado hoy.",
       totalEarnings: "Ganancias Totales",
       activeLeads: "Leads Activos",
-      clickCount: "Total de Clics",
+      inactiveLeads: "Leads Inactivos",
       fromLastMonth: "respecto al mes pasado",
       yourAffiliateLink: "Tu Enlace de Afiliado",
       shareToEarn: "Comparte este enlace para ganar comisiones",
