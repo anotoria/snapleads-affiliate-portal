@@ -14,32 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
+      commission_history: {
+        Row: {
+          base_revenue: number
+          bonus_value: number
+          calculated_at: string
+          calculated_by: string | null
+          client_count: number
+          commission_rate: number
+          commission_value: number
+          created_at: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          reference_month: string
+          status: string
+          tier_name: string
+          total_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          base_revenue?: number
+          bonus_value?: number
+          calculated_at?: string
+          calculated_by?: string | null
+          client_count?: number
+          commission_rate: number
+          commission_value?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          reference_month: string
+          status?: string
+          tier_name: string
+          total_value?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          base_revenue?: number
+          bonus_value?: number
+          calculated_at?: string
+          calculated_by?: string | null
+          client_count?: number
+          commission_rate?: number
+          commission_value?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          reference_month?: string
+          status?: string
+          tier_name?: string
+          total_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          category: string
+          created_at: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          is_public: boolean
+          name: string
+          uploaded_by: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          is_public?: boolean
+          name: string
+          uploaded_by: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_public?: boolean
+          name?: string
+          uploaded_by?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
+          access_count: number
           commission: number
           created_at: string
           email: string
           id: string
+          monthly_value: number
           name: string
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          access_count?: number
           commission?: number
           created_at?: string
           email: string
           id?: string
+          monthly_value?: number
           name: string
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          access_count?: number
           commission?: number
           created_at?: string
           email?: string
           id?: string
+          monthly_value?: number
           name?: string
           status?: string
           updated_at?: string
@@ -80,35 +185,244 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_tiers: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          max_access: number | null
+          min_access: number
+          monthly_price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_access?: number | null
+          min_access?: number
+          monthly_price: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_access?: number | null
+          min_access?: number
+          monthly_price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           affiliate_code: string | null
           avatar_url: string | null
+          cnpj: string | null
+          company_name: string | null
           created_at: string
+          deactivated_at: string | null
+          deactivated_by: string | null
           full_name: string | null
           id: string
+          is_active: boolean
           must_change_password: boolean
+          phone: string | null
+          tier_level: string
           updated_at: string
           user_id: string
         }
         Insert: {
           affiliate_code?: string | null
           avatar_url?: string | null
+          cnpj?: string | null
+          company_name?: string | null
           created_at?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean
           must_change_password?: boolean
+          phone?: string | null
+          tier_level?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           affiliate_code?: string | null
           avatar_url?: string | null
+          cnpj?: string | null
+          company_name?: string | null
           created_at?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
           full_name?: string | null
           id?: string
+          is_active?: boolean
           must_change_password?: boolean
+          phone?: string | null
+          tier_level?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin_reply: boolean
+          message: string
+          ticket_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean
+          message: string
+          ticket_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin_reply?: boolean
+          message?: string
+          ticket_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string
+          priority: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message: string
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          priority?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tiers: {
+        Row: {
+          bonus_amount: number
+          color: string
+          commission_percentage: number
+          created_at: string
+          display_name: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          max_revenue: number | null
+          min_revenue: number
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          bonus_amount?: number
+          color: string
+          commission_percentage: number
+          created_at?: string
+          display_name: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          max_revenue?: number | null
+          min_revenue?: number
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          bonus_amount?: number
+          color?: string
+          commission_percentage?: number
+          created_at?: string
+          display_name?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          max_revenue?: number | null
+          min_revenue?: number
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -118,10 +432,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_monthly_value: {
+        Args: { access_count: number }
+        Returns: number
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "super_admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -248,6 +574,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "super_admin", "user"],
+    },
   },
 } as const
