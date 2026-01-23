@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/hooks/useLanguage";
 import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
@@ -20,6 +21,8 @@ export const MetricCard = ({
   isLoading = false,
   trend,
 }: MetricCardProps) => {
+  const { t } = useLanguage();
+
   return (
     <Card className="border-border/50 shadow-card transition-shadow hover:shadow-card-hover">
       <CardContent className="p-6">
@@ -39,7 +42,7 @@ export const MetricCard = ({
                 )}
               >
                 {trend.isPositive ? "+" : "-"}
-                {Math.abs(trend.value)}% from last month
+                {Math.abs(trend.value)}% {t.dashboard.fromLastMonth}
               </p>
             )}
           </div>

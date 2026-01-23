@@ -1,5 +1,7 @@
 import { Menu, LogOut, Globe } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
+import { Language } from "@/i18n/translations";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -19,6 +21,7 @@ import {
 
 export const AppHeader = () => {
   const { profile, signOut } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -28,6 +31,10 @@ export const AppHeader = () => {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleLanguageChange = (value: string) => {
+    setLanguage(value as Language);
   };
 
   return (
@@ -40,7 +47,7 @@ export const AppHeader = () => {
 
       <div className="flex items-center gap-4">
         {/* Language Selector */}
-        <Select defaultValue="en">
+        <Select value={language} onValueChange={handleLanguageChange}>
           <SelectTrigger className="w-[100px] border-border">
             <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
             <SelectValue />
@@ -72,7 +79,7 @@ export const AppHeader = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
-              Sign out
+              {t.signOut}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

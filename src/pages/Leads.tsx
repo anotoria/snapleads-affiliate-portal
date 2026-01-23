@@ -1,15 +1,18 @@
 import { Users } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Leads = () => {
+  const { t } = useLanguage();
+
   return (
     <AppLayout>
       <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">My Leads</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t.leads.title}</h1>
           <p className="mt-1 text-muted-foreground">
-            Track and manage all your referred leads.
+            {t.leads.subtitle}
           </p>
         </div>
 
@@ -20,8 +23,8 @@ const Leads = () => {
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle>Lead Management</CardTitle>
-                <CardDescription>Coming soon in Phase 2</CardDescription>
+                <CardTitle>{t.leads.management}</CardTitle>
+                <CardDescription>{t.leads.comingSoon}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -30,10 +33,10 @@ const Leads = () => {
               <div className="text-center">
                 <Users className="mx-auto h-12 w-12 text-muted-foreground/50" />
                 <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  Lead tracking will be available soon
+                  {t.leads.trackingAvailable}
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground/70">
-                  View conversion rates, lead status, and more
+                  {t.leads.viewRates}
                 </p>
               </div>
             </div>

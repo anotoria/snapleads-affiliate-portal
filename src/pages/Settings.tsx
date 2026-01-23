@@ -1,15 +1,18 @@
 import { Settings as SettingsIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Settings = () => {
+  const { t } = useLanguage();
+
   return (
     <AppLayout>
       <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t.settings.title}</h1>
           <p className="mt-1 text-muted-foreground">
-            Manage your account preferences and settings.
+            {t.settings.subtitle}
           </p>
         </div>
 
@@ -20,8 +23,8 @@ const Settings = () => {
                 <SettingsIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>Coming soon in Phase 2</CardDescription>
+                <CardTitle>{t.settings.accountSettings}</CardTitle>
+                <CardDescription>{t.settings.comingSoon}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -30,10 +33,10 @@ const Settings = () => {
               <div className="text-center">
                 <SettingsIcon className="mx-auto h-12 w-12 text-muted-foreground/50" />
                 <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  Settings panel will be available soon
+                  {t.settings.panelAvailable}
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground/70">
-                  Update profile, notifications, and security settings
+                  {t.settings.updateProfile}
                 </p>
               </div>
             </div>

@@ -1,15 +1,18 @@
 import { Wallet } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Payouts = () => {
+  const { t } = useLanguage();
+
   return (
     <AppLayout>
       <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Payouts</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t.payouts.title}</h1>
           <p className="mt-1 text-muted-foreground">
-            View your earnings and payout history.
+            {t.payouts.subtitle}
           </p>
         </div>
 
@@ -20,8 +23,8 @@ const Payouts = () => {
                 <Wallet className="h-5 w-5 text-success" />
               </div>
               <div>
-                <CardTitle>Payout Management</CardTitle>
-                <CardDescription>Coming soon in Phase 2</CardDescription>
+                <CardTitle>{t.payouts.management}</CardTitle>
+                <CardDescription>{t.payouts.comingSoon}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -30,10 +33,10 @@ const Payouts = () => {
               <div className="text-center">
                 <Wallet className="mx-auto h-12 w-12 text-muted-foreground/50" />
                 <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  Payout system will be available soon
+                  {t.payouts.systemAvailable}
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground/70">
-                  Request payouts, view history, and set up payment methods
+                  {t.payouts.requestPayouts}
                 </p>
               </div>
             </div>
