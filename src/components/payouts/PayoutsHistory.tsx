@@ -1,7 +1,7 @@
-import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Wallet } from "lucide-react";
+import { Wallet, Loader2 } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { usePayouts, PayoutStatus } from "@/hooks/usePayouts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,41 +14,15 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-type PayoutStatus = "pending" | "processing" | "completed";
-
-interface Payout {
-  id: string;
-  date: string;
-  amount: number;
-  status: PayoutStatus;
-  method: string;
-}
-
-// Mock data for payouts
-const generateMockPayouts = (): Payout[] => {
-  const methods = ["PayPal", "Bank Transfer", "Wise"];
-  const statuses: PayoutStatus[] = ["pending", "processing", "completed"];
-  const payouts: Payout[] = [];
-  
-  for (let i = 0; i < 8; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 90));
-    
-    payouts.push({
-      id: `payout-${i + 1}`,
-      date: date.toISOString().split("T")[0],
-      amount: Math.floor(Math.random() * 400) + 50,
-      status: i < 2 ? statuses[Math.floor(Math.random() * 2)] : "completed",
-      method: methods[Math.floor(Math.random() * methods.length)],
-    });
-  }
-  
-  return payouts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+const methodLabels: Record<string, string> = {
+  pix: "PIX",
+  bank_transfer: "Bank Transfer",
+  paypal: "PayPal",
 };
 
 export const PayoutsHistory = () => {
   const { t } = useLanguage();
-  const payouts = useMemo(() => generateMockPayouts(), []);
+  const { data: payouts = [], isLoading, error } = usePayouts();
   
   const getStatusBadge = (status: PayoutStatus) => {
     const variants: Record<PayoutStatus, { variant: "default" | "secondary" | "outline"; label: string }> = {
@@ -63,6 +37,20 @@ export const PayoutsHistory = () => {
       </Badge>
     );
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (error) {
+    return (
+      <Card className="border-border/50 shadow-card">
+        <CardContent className="flex min-h-[200px] items-center justify-center">
+          <p className="text-destructive">Error loading payouts. Please try again.</p>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <motion.div
@@ -96,7 +84,11 @@ export const PayoutsHistory = () => {
         </CardHeader>
         
         <CardContent className="px-4 sm:px-6">
-          {payouts.length === 0 ? (
+          {isLoading ? (
+            <div className="flex min-h-[150px] sm:min-h-[200px] items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : payouts.length === 0 ? (
             <div className="flex min-h-[150px] sm:min-h-[200px] items-center justify-center rounded-lg border-2 border-dashed border-border bg-accent/30">
               <div className="text-center px-4">
                 <Wallet className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
@@ -125,8 +117,8 @@ export const PayoutsHistory = () => {
                       {getStatusBadge(payout.status)}
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{payout.method}</span>
-                      <span>{payout.date}</span>
+                      <span>{methodLabels[payout.method] || payout.method}</span>
+                      <span>{formatDate(payout.created_at)}</span>
                     </div>
                   </motion.div>
                 ))}
@@ -153,9 +145,9 @@ export const PayoutsHistory = () => {
                           transition={{ delay: index * 0.03 }}
                           className="hover:bg-accent/30 border-b border-border last:border-0"
                         >
-                          <TableCell className="text-muted-foreground">{payout.date}</TableCell>
+                          <TableCell className="text-muted-foreground">{formatDate(payout.created_at)}</TableCell>
                           <TableCell className="font-medium">${payout.amount.toFixed(2)}</TableCell>
-                          <TableCell className="text-muted-foreground">{payout.method}</TableCell>
+                          <TableCell className="text-muted-foreground">{methodLabels[payout.method] || payout.method}</TableCell>
                           <TableCell>{getStatusBadge(payout.status)}</TableCell>
                         </motion.tr>
                       ))}

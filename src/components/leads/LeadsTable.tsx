@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, Users, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useLeads, LeadStatus } from "@/hooks/useLeads";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,67 +23,26 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-type LeadStatus = "pending" | "converted" | "expired";
-
-interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  status: LeadStatus;
-  date: string;
-  commission: number;
-}
-
-// Mock data for leads
-const generateMockLeads = (): Lead[] => {
-  const names = [
-    "John Smith", "Maria Garcia", "James Wilson", "Emma Johnson", "Michael Brown",
-    "Sofia Martinez", "David Lee", "Isabella Anderson", "Daniel Taylor", "Olivia Thomas"
-  ];
-  
-  const statuses: LeadStatus[] = ["pending", "converted", "expired"];
-  const leads: Lead[] = [];
-  
-  for (let i = 0; i < 25; i++) {
-    const name = names[Math.floor(Math.random() * names.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 60));
-    
-    leads.push({
-      id: `lead-${i + 1}`,
-      name: `${name} ${i + 1}`,
-      email: `${name.toLowerCase().replace(" ", ".")}${i + 1}@email.com`,
-      status,
-      date: date.toISOString().split("T")[0],
-      commission: status === "converted" ? Math.floor(Math.random() * 100) + 20 : 0,
-    });
-  }
-  
-  return leads.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-};
-
 const ITEMS_PER_PAGE = 10;
 
 export const LeadsTable = () => {
   const { t } = useLanguage();
+  const { data: leads = [], isLoading, error } = useLeads();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   
-  const allLeads = useMemo(() => generateMockLeads(), []);
-  
   const filteredLeads = useMemo(() => {
-    return allLeads.filter((lead) => {
+    return leads.filter((lead) => {
       const matchesSearch = 
         lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lead.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [allLeads, searchQuery, statusFilter]);
+  }, [leads, searchQuery, statusFilter]);
   
-  const totalPages = Math.ceil(filteredLeads.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / ITEMS_PER_PAGE));
   const paginatedLeads = filteredLeads.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
@@ -103,6 +63,20 @@ export const LeadsTable = () => {
   };
   
   const totalCommission = filteredLeads.reduce((sum, lead) => sum + lead.commission, 0);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (error) {
+    return (
+      <Card className="border-border/50 shadow-card">
+        <CardContent className="flex min-h-[300px] items-center justify-center">
+          <p className="text-destructive">Error loading leads. Please try again.</p>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <motion.div
@@ -161,7 +135,11 @@ export const LeadsTable = () => {
         </CardHeader>
         
         <CardContent className="px-4 sm:px-6">
-          {paginatedLeads.length === 0 ? (
+          {isLoading ? (
+            <div className="flex min-h-[200px] sm:min-h-[300px] items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : paginatedLeads.length === 0 ? (
             <div className="flex min-h-[200px] sm:min-h-[300px] items-center justify-center rounded-lg border-2 border-dashed border-border bg-accent/30">
               <div className="text-center px-4">
                 <Users className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
@@ -191,7 +169,7 @@ export const LeadsTable = () => {
                     </div>
                     <p className="text-sm text-muted-foreground">{lead.email}</p>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{lead.date}</span>
+                      <span className="text-muted-foreground">{formatDate(lead.created_at)}</span>
                       <span className="font-medium">
                         {lead.commission > 0 ? `$${lead.commission.toFixed(2)}` : "-"}
                       </span>
@@ -225,7 +203,7 @@ export const LeadsTable = () => {
                           <TableCell className="font-medium">{lead.name}</TableCell>
                           <TableCell className="text-muted-foreground">{lead.email}</TableCell>
                           <TableCell>{getStatusBadge(lead.status)}</TableCell>
-                          <TableCell className="text-muted-foreground">{lead.date}</TableCell>
+                          <TableCell className="text-muted-foreground">{formatDate(lead.created_at)}</TableCell>
                           <TableCell className="text-right font-medium">
                             {lead.commission > 0 ? `$${lead.commission.toFixed(2)}` : "-"}
                           </TableCell>

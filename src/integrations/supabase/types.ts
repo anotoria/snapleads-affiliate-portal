@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      leads: {
+        Row: {
+          commission: number
+          created_at: string
+          email: string
+          id: string
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          commission?: number
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          commission?: number
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payouts: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          method: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          method?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          method?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           affiliate_code: string | null
