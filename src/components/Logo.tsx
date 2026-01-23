@@ -1,21 +1,25 @@
-import { Zap } from "lucide-react";
+import snapleadsLogo from "@/assets/snapleads-logo.png";
 
 interface LogoProps {
   collapsed?: boolean;
   className?: string;
+  size?: "sm" | "md" | "lg";
 }
 
-export const Logo = ({ collapsed = false, className = "" }: LogoProps) => {
+export const Logo = ({ collapsed = false, className = "", size = "md" }: LogoProps) => {
+  const sizeClasses = {
+    sm: "h-8",
+    md: "h-10",
+    lg: "h-16",
+  };
+
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-gradient shadow-brand">
-        <Zap className="h-5 w-5 text-primary-foreground" />
-      </div>
-      {!collapsed && (
-        <span className="text-xl font-bold text-foreground">
-          Snap<span className="text-brand-gradient">Leads</span>
-        </span>
-      )}
+    <div className={`flex items-center ${className}`}>
+      <img 
+        src={snapleadsLogo} 
+        alt="SnapLeads" 
+        className={`${sizeClasses[size]} w-auto object-contain ${collapsed ? "max-w-[40px]" : ""}`}
+      />
     </div>
   );
 };
