@@ -12,8 +12,10 @@ interface MetricCardProps {
   trend?: {
     value: number;
     isPositive: boolean;
+    label?: string;
   };
   delay?: number;
+  variant?: "default" | "highlight";
 }
 
 export const MetricCard = ({
@@ -23,6 +25,7 @@ export const MetricCard = ({
   isLoading = false,
   trend,
   delay = 0,
+  variant = "default",
 }: MetricCardProps) => {
   const { t } = useLanguage();
 
@@ -40,7 +43,10 @@ export const MetricCard = ({
         transition: { duration: 0.2 },
       }}
     >
-      <Card className="border-border/50 shadow-card transition-shadow hover:shadow-card-hover h-full">
+      <Card className={cn(
+        "border-border/50 shadow-card transition-shadow hover:shadow-card-hover h-full",
+        variant === "highlight" && "border-primary/20"
+      )}>
         <CardContent className="p-4 sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2 min-w-0 flex-1">
@@ -57,13 +63,16 @@ export const MetricCard = ({
                     trend.isPositive ? "text-success" : "text-destructive"
                   )}
                 >
-                  {trend.isPositive ? "+" : "-"}
-                  {Math.abs(trend.value)}% {t.dashboard.fromLastMonth}
+                  {trend.isPositive ? "+" : ""}
+                  {trend.value.toFixed(1)}% {trend.label || t.dashboard.increase || "aumento"}
                 </p>
               )}
             </div>
             <motion.div 
-              className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg bg-accent"
+              className={cn(
+                "flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-lg",
+                variant === "highlight" ? "bg-primary/10" : "bg-accent"
+              )}
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ type: "spring", stiffness: 400 }}
             >

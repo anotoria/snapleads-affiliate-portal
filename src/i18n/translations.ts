@@ -48,6 +48,26 @@ type DashboardTranslations = {
   nextTier: string;
   toNextTier: string;
   commission: string;
+  // New dashboard translations
+  activeClients: string;
+  monthlyRevenue: string;
+  currentCommission: string;
+  partnerLevel: string;
+  levelProgress: string;
+  remaining: string;
+  bonusMessage: string;
+  bonusMessagePart2: string;
+  bonusMessagePart3: string;
+  maxLevelReached: string;
+  partnerSummary: string;
+  lastPayment: string;
+  nextEstimatedPayment: string;
+  partnerStatus: string;
+  toReach: string;
+  increase: string;
+  commissionsLast6Months: string;
+  partnerDashboard: string;
+  dashboardSubtitle: string;
 };
 
 type NavTranslations = {
@@ -408,6 +428,25 @@ export const translations = {
       nextTier: "Next Tier",
       toNextTier: "to reach next tier",
       commission: "commission",
+      activeClients: "Active Clients",
+      monthlyRevenue: "Monthly Revenue",
+      currentCommission: "Current Commission",
+      partnerLevel: "Partner Level",
+      levelProgress: "Level Progress",
+      remaining: "Remaining",
+      bonusMessage: "When you reach",
+      bonusMessagePart2: "you will receive a bonus of",
+      bonusMessagePart3: "and your commission will increase to",
+      maxLevelReached: "You are at the maximum level!",
+      partnerSummary: "Partner Summary",
+      lastPayment: "Last Payment",
+      nextEstimatedPayment: "Next Estimated Payment",
+      partnerStatus: "Partner Status",
+      toReach: "to",
+      increase: "increase",
+      commissionsLast6Months: "Commissions (Last 6 months)",
+      partnerDashboard: "Partner Dashboard",
+      dashboardSubtitle: "Overview of your clients, commissions and performance.",
     },
 
     nav: {
@@ -729,6 +768,25 @@ export const translations = {
       nextTier: "Próximo Nível",
       toNextTier: "para alcançar o próximo nível",
       commission: "de comissão",
+      activeClients: "Clientes Ativos",
+      monthlyRevenue: "Faturamento Mensal",
+      currentCommission: "Comissão Atual",
+      partnerLevel: "Nível do Parceiro",
+      levelProgress: "Progresso de Nível",
+      remaining: "Falta",
+      bonusMessage: "Ao atingir",
+      bonusMessagePart2: "você receberá um bônus de",
+      bonusMessagePart3: "e sua comissão aumentará para",
+      maxLevelReached: "Você está no nível máximo!",
+      partnerSummary: "Resumo do Parceiro",
+      lastPayment: "Último Pagamento",
+      nextEstimatedPayment: "Próximo Pagamento Estimado",
+      partnerStatus: "Status do Parceiro",
+      toReach: "para",
+      increase: "aumento",
+      commissionsLast6Months: "Comissões (Últimos 6 meses)",
+      partnerDashboard: "Dashboard do Parceiro",
+      dashboardSubtitle: "Visão geral dos seus clientes, comissões e performance.",
     },
 
     nav: {
@@ -1050,6 +1108,25 @@ export const translations = {
       nextTier: "Próximo Nivel",
       toNextTier: "para alcanzar el próximo nivel",
       commission: "de comisión",
+      activeClients: "Clientes Activos",
+      monthlyRevenue: "Facturación Mensual",
+      currentCommission: "Comisión Actual",
+      partnerLevel: "Nivel del Socio",
+      levelProgress: "Progreso de Nivel",
+      remaining: "Falta",
+      bonusMessage: "Al alcanzar",
+      bonusMessagePart2: "recibirás un bono de",
+      bonusMessagePart3: "y tu comisión aumentará a",
+      maxLevelReached: "¡Estás en el nivel máximo!",
+      partnerSummary: "Resumen del Socio",
+      lastPayment: "Último Pago",
+      nextEstimatedPayment: "Próximo Pago Estimado",
+      partnerStatus: "Estado del Socio",
+      toReach: "para",
+      increase: "aumento",
+      commissionsLast6Months: "Comisiones (Últimos 6 meses)",
+      partnerDashboard: "Dashboard del Socio",
+      dashboardSubtitle: "Visión general de tus clientes, comisiones y rendimiento.",
     },
 
     nav: {

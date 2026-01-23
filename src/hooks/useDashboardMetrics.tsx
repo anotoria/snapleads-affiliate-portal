@@ -13,6 +13,14 @@ export interface DashboardMetrics {
   availableBalance: number;
   earningsChange: number;
   leadsChange: number;
+  // New metrics
+  monthlyRevenue: number;
+  currentCommission: number;
+  monthlyRevenueChange: number;
+  commissionChange: number;
+  lastPayoutAmount: number;
+  lastPayoutDate: string | null;
+  nextEstimatedPayout: number;
 }
 
 export const useDashboardMetrics = () => {
@@ -33,6 +41,13 @@ export const useDashboardMetrics = () => {
           availableBalance: 0,
           earningsChange: 0,
           leadsChange: 0,
+          monthlyRevenue: 0,
+          currentCommission: 0,
+          monthlyRevenueChange: 0,
+          commissionChange: 0,
+          lastPayoutAmount: 0,
+          lastPayoutDate: null,
+          nextEstimatedPayout: 0,
         };
       }
 
@@ -51,7 +66,8 @@ export const useDashboardMetrics = () => {
       const { data: payouts, error: payoutsError } = await supabase
         .from("payouts")
         .select("*")
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
       if (payoutsError) {
         console.error("Error fetching payouts:", payoutsError);
@@ -62,11 +78,18 @@ export const useDashboardMetrics = () => {
       const payoutsData = payouts || [];
 
       // Calculate metrics
+      const activeLeads = leadsData.filter(lead => lead.status === "active");
+      const inactiveLeads = leadsData.filter(lead => lead.status === "inactive");
+      const pendingLeads = leadsData.filter(lead => lead.status === "pending");
+
+      // Monthly revenue from active leads
+      const monthlyRevenue = activeLeads.reduce((sum, lead) => sum + Number(lead.monthly_value || 0), 0);
+      
+      // Total earnings (commissions from all leads)
       const totalEarnings = leadsData.reduce((sum, lead) => sum + Number(lead.commission), 0);
-      const activeLeads = leadsData.filter(lead => lead.status === "active").length;
-      const inactiveLeads = leadsData.filter(lead => lead.status === "inactive").length;
-      const pendingLeads = leadsData.filter(lead => lead.status === "pending").length;
-      const totalLeads = leadsData.length;
+      
+      // Current month commission (from active leads)
+      const currentCommission = activeLeads.reduce((sum, lead) => sum + Number(lead.commission), 0);
 
       const pendingPayouts = payoutsData
         .filter(p => p.status === "pending" || p.status === "processing")
@@ -78,47 +101,76 @@ export const useDashboardMetrics = () => {
 
       const availableBalance = totalEarnings - totalPaid - pendingPayouts;
 
+      // Last completed payout
+      const lastCompletedPayout = payoutsData.find(p => p.status === "completed");
+      const lastPayoutAmount = lastCompletedPayout ? Number(lastCompletedPayout.amount) : 0;
+      const lastPayoutDate = lastCompletedPayout?.completed_at || null;
+
+      // Next estimated payout (current commission)
+      const nextEstimatedPayout = currentCommission;
+
       // Calculate month-over-month changes
       const now = new Date();
       const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-      const thisMonthEarnings = leadsData
-        .filter(lead => new Date(lead.created_at) >= thisMonth)
-        .reduce((sum, lead) => sum + Number(lead.commission), 0);
+      const thisMonthLeads = leadsData.filter(lead => new Date(lead.created_at) >= thisMonth);
+      const lastMonthLeads = leadsData.filter(lead => {
+        const date = new Date(lead.created_at);
+        return date >= lastMonth && date < thisMonth;
+      });
 
-      const lastMonthEarnings = leadsData
-        .filter(lead => {
-          const date = new Date(lead.created_at);
-          return date >= lastMonth && date < thisMonth;
-        })
-        .reduce((sum, lead) => sum + Number(lead.commission), 0);
+      const thisMonthEarnings = thisMonthLeads.reduce((sum, lead) => sum + Number(lead.commission), 0);
+      const lastMonthEarnings = lastMonthLeads.reduce((sum, lead) => sum + Number(lead.commission), 0);
+
+      const thisMonthRevenue = thisMonthLeads
+        .filter(l => l.status === "active")
+        .reduce((sum, lead) => sum + Number(lead.monthly_value || 0), 0);
+      const lastMonthRevenue = lastMonthLeads
+        .filter(l => l.status === "active")
+        .reduce((sum, lead) => sum + Number(lead.monthly_value || 0), 0);
 
       const earningsChange = lastMonthEarnings > 0 
         ? ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings) * 100 
         : thisMonthEarnings > 0 ? 100 : 0;
 
-      const thisMonthLeads = leadsData.filter(lead => new Date(lead.created_at) >= thisMonth).length;
-      const lastMonthLeads = leadsData.filter(lead => {
-        const date = new Date(lead.created_at);
-        return date >= lastMonth && date < thisMonth;
-      }).length;
+      const leadsChange = lastMonthLeads.length > 0 
+        ? ((thisMonthLeads.length - lastMonthLeads.length) / lastMonthLeads.length) * 100 
+        : thisMonthLeads.length > 0 ? 100 : 0;
 
-      const leadsChange = lastMonthLeads > 0 
-        ? ((thisMonthLeads - lastMonthLeads) / lastMonthLeads) * 100 
-        : thisMonthLeads > 0 ? 100 : 0;
+      const monthlyRevenueChange = lastMonthRevenue > 0
+        ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+        : thisMonthRevenue > 0 ? 100 : 0;
+
+      const thisMonthCommission = thisMonthLeads
+        .filter(l => l.status === "active")
+        .reduce((sum, lead) => sum + Number(lead.commission), 0);
+      const lastMonthCommission = lastMonthLeads
+        .filter(l => l.status === "active")
+        .reduce((sum, lead) => sum + Number(lead.commission), 0);
+
+      const commissionChange = lastMonthCommission > 0
+        ? ((thisMonthCommission - lastMonthCommission) / lastMonthCommission) * 100
+        : thisMonthCommission > 0 ? 100 : 0;
 
       return {
         totalEarnings,
-        activeLeads,
-        inactiveLeads,
-        pendingLeads,
-        totalLeads,
+        activeLeads: activeLeads.length,
+        inactiveLeads: inactiveLeads.length,
+        pendingLeads: pendingLeads.length,
+        totalLeads: leadsData.length,
         pendingPayouts,
         totalPaid,
         availableBalance: Math.max(0, availableBalance),
         earningsChange,
         leadsChange,
+        monthlyRevenue,
+        currentCommission,
+        monthlyRevenueChange,
+        commissionChange,
+        lastPayoutAmount,
+        lastPayoutDate,
+        nextEstimatedPayout,
       };
     },
     enabled: !!user?.id,
@@ -264,6 +316,75 @@ export const useEarningsPerformanceData = () => {
           date,
           dailyEarnings: dailyNet,
           cumulativeEarnings: Math.max(0, cumulative),
+        };
+      });
+    },
+    enabled: !!user?.id,
+  });
+};
+
+// Commissions chart data - last 6 months
+export interface CommissionsChartDataPoint {
+  month: string;
+  monthLabel: string;
+  commission: number;
+}
+
+export const useCommissionsChartData = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["commissions-chart-data", user?.id],
+    queryFn: async (): Promise<CommissionsChartDataPoint[]> => {
+      if (!user?.id) return [];
+
+      // Get data from last 6 months
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const { data: leads, error } = await supabase
+        .from("leads")
+        .select("created_at, commission, status")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .gte("created_at", sixMonthsAgo.toISOString())
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching commissions chart data:", error);
+        throw error;
+      }
+
+      // Group by month
+      const dataByMonth: Record<string, number> = {};
+      const monthLabels: Record<string, string> = {};
+      
+      // Initialize last 6 months
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        dataByMonth[monthKey] = 0;
+        monthLabels[monthKey] = date.toLocaleDateString("pt-BR", { month: "short" });
+      }
+
+      // Populate with real data
+      (leads || []).forEach((lead) => {
+        const date = new Date(lead.created_at);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        if (dataByMonth[monthKey] !== undefined) {
+          dataByMonth[monthKey] += Number(lead.commission);
+        }
+      });
+
+      // Convert to array with cumulative
+      let cumulative = 0;
+      return Object.entries(dataByMonth).map(([month, commission]) => {
+        cumulative += commission;
+        return {
+          month,
+          monthLabel: monthLabels[month] || month,
+          commission: cumulative,
         };
       });
     },
