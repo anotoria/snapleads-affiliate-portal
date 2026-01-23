@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
-export type LeadStatus = "pending" | "converted" | "expired";
+export type LeadStatus = "pending" | "late_payment" | "active" | "inactive";
 
 export interface Lead {
   id: string;

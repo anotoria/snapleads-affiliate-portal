@@ -56,8 +56,9 @@ type LeadsTranslations = {
   filterByStatus: string;
   allStatuses: string;
   pending: string;
-  converted: string;
-  expired: string;
+  late_payment: string;
+  active: string;
+  inactive: string;
   name: string;
   email: string;
   status: string;
@@ -195,9 +196,10 @@ export const translations = {
       searchPlaceholder: "Search by name or email...",
       filterByStatus: "Filter by status",
       allStatuses: "All Statuses",
-      pending: "Overdue",
-      converted: "Active",
-      expired: "Inactive",
+      pending: "Pending",
+      late_payment: "Late Payment",
+      active: "Active",
+      inactive: "Inactive",
       name: "Name",
       email: "Email",
       status: "Status",
@@ -324,9 +326,10 @@ export const translations = {
       searchPlaceholder: "Buscar por nome ou email...",
       filterByStatus: "Filtrar por status",
       allStatuses: "Todos os Status",
-      pending: "Em Atraso",
-      converted: "Ativo",
-      expired: "Inativo",
+      pending: "Pendente",
+      late_payment: "Pagamento Atrasado",
+      active: "Ativo",
+      inactive: "Inativo",
       name: "Nome",
       email: "Email",
       status: "Status",
@@ -453,9 +456,10 @@ export const translations = {
       searchPlaceholder: "Buscar por nombre o email...",
       filterByStatus: "Filtrar por estado",
       allStatuses: "Todos los Estados",
-      pending: "Atrasado",
-      converted: "Activo",
-      expired: "Inactivo",
+      pending: "Pendiente",
+      late_payment: "Pago Atrasado",
+      active: "Activo",
+      inactive: "Inactivo",
       name: "Nombre",
       email: "Email",
       status: "Estado",
