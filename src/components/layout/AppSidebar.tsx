@@ -54,8 +54,8 @@ export const AppSidebar = () => {
       className="border-r border-sidebar-border bg-sidebar"
       collapsible="icon"
     >
-      <SidebarHeader className="border-b border-sidebar-border p-4 dark:bg-white/10 dark:rounded-lg dark:m-2 dark:mb-0 dark:border-none">
-        <Logo collapsed={collapsed} size={collapsed ? "sm" : "md"} showSubtitle={!collapsed} />
+      <SidebarHeader className="border-b border-sidebar-border p-4 dark:bg-white/10 dark:rounded-lg dark:m-2 dark:mb-0 dark:border-none flex justify-center">
+        <Logo collapsed={collapsed} size={collapsed ? "sm" : "md"} showSubtitle={!collapsed} centered />
       </SidebarHeader>
 
       <SidebarContent className="p-2">

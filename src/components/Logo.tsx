@@ -6,9 +6,10 @@ interface LogoProps {
   className?: string;
   size?: "sm" | "md" | "lg";
   showSubtitle?: boolean;
+  centered?: boolean;
 }
 
-export const Logo = ({ collapsed = false, className = "", size = "md", showSubtitle = false }: LogoProps) => {
+export const Logo = ({ collapsed = false, className = "", size = "md", showSubtitle = false, centered = false }: LogoProps) => {
   const { t } = useLanguage();
   
   const sizeClasses = {
@@ -18,7 +19,7 @@ export const Logo = ({ collapsed = false, className = "", size = "md", showSubti
   };
 
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex flex-col ${centered ? "items-center" : ""} ${className}`}>
       <div className="flex items-center">
         <img 
           src={snapleadsLogo} 
@@ -27,7 +28,7 @@ export const Logo = ({ collapsed = false, className = "", size = "md", showSubti
         />
       </div>
       {showSubtitle && (
-        <span className="text-xs text-muted-foreground mt-1">{t.common.affiliatePortal}</span>
+        <span className={`text-xs text-muted-foreground mt-1 ${centered ? "text-center" : ""}`}>{t.common.affiliatePortal}</span>
       )}
     </div>
   );
