@@ -21,10 +21,18 @@ const sanitizeString = (str: string, maxLength: number = 255): string => {
 };
 
 interface WebhookPayload {
-  action: "insert" | "update" | "upsert";
+  action: "insert" | "update" | "upsert" | "get";
   table: "profiles" | "leads" | "payouts" | "users";
-  data: Record<string, unknown>;
+  data?: Record<string, unknown>;
   match?: Record<string, unknown>;
+  filters?: {
+    user_id?: string;
+    status?: string;
+    created_after?: string;
+    created_before?: string;
+    limit?: number;
+    offset?: number;
+  };
 }
 
 interface UserData {
@@ -56,16 +64,24 @@ Deno.serve(async (req) => {
     const payload: WebhookPayload = await req.json();
     console.log("Received webhook payload:", JSON.stringify(payload, null, 2));
 
-    if (!payload.action || !payload.table || !payload.data) {
+    if (!payload.action || !payload.table) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: action, table, data" }),
+        JSON.stringify({ error: "Missing required fields: action, table" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!["insert", "update", "upsert"].includes(payload.action)) {
+    if (!["insert", "update", "upsert", "get"].includes(payload.action)) {
       return new Response(
-        JSON.stringify({ error: "Invalid action. Must be: insert, update, or upsert" }),
+        JSON.stringify({ error: "Invalid action. Must be: insert, update, upsert, or get" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // For insert/update/upsert, data is required
+    if (["insert", "update", "upsert"].includes(payload.action) && !payload.data) {
+      return new Response(
+        JSON.stringify({ error: "Missing required field 'data' for this action" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -83,15 +99,24 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { action, table, data, match } = payload;
+    const { action, table, data, match, filters } = payload;
+
+    // Handle GET action
+    if (action === "get") {
+      const result = await handleGetOperation(supabase, table, filters);
+      return new Response(
+        JSON.stringify(result),
+        { status: result.success ? 200 : 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Handle users table separately (uses Auth Admin API)
     if (table === "users") {
       const userData: UserData = {
-        email: String(data.email || ""),
-        password: data.password ? String(data.password) : undefined,
-        full_name: data.full_name ? String(data.full_name) : undefined,
-        affiliate_code: data.affiliate_code ? String(data.affiliate_code) : undefined,
+        email: String(data!.email || ""),
+        password: data!.password ? String(data!.password) : undefined,
+        full_name: data!.full_name ? String(data!.full_name) : undefined,
+        affiliate_code: data!.affiliate_code ? String(data!.affiliate_code) : undefined,
       };
       const result = await handleUserOperation(supabase, action, userData, match);
       return new Response(
@@ -101,7 +126,7 @@ Deno.serve(async (req) => {
     }
 
     // Validate and sanitize data for other tables
-    const validatedData = validateTableData(table, data);
+    const validatedData = validateTableData(table, data!);
     if (validatedData.error) {
       return new Response(
         JSON.stringify({ error: validatedData.error }),
@@ -173,6 +198,208 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+interface GetFilters {
+  user_id?: string;
+  status?: string;
+  created_after?: string;
+  created_before?: string;
+  limit?: number;
+  offset?: number;
+}
+
+// deno-lint-ignore no-explicit-any
+async function handleGetOperation(
+  supabase: any,
+  table: string,
+  filters?: GetFilters
+): Promise<{ success: boolean; result?: unknown; error?: string }> {
+  const limit = filters?.limit || 100;
+  const offset = filters?.offset || 0;
+
+  try {
+    if (table === "users") {
+      // Get users with their profiles
+      let profileQuery = supabase
+        .from("profiles")
+        .select("*, leads:leads(count), payouts:payouts(count)")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (filters?.user_id) {
+        profileQuery = profileQuery.eq("user_id", filters.user_id);
+      }
+
+      if (filters?.created_after) {
+        profileQuery = profileQuery.gte("created_at", filters.created_after);
+      }
+
+      if (filters?.created_before) {
+        profileQuery = profileQuery.lte("created_at", filters.created_before);
+      }
+
+      const { data: profiles, error: profileError } = await profileQuery;
+
+      if (profileError) {
+        return { success: false, error: profileError.message };
+      }
+
+      // Enrich with auth user data
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      
+      if (authError) {
+        return { success: false, error: authError.message };
+      }
+
+      // deno-lint-ignore no-explicit-any
+      const enrichedUsers = profiles.map((profile: any) => {
+        // deno-lint-ignore no-explicit-any
+        const authUser = authUsers.users.find((u: any) => u.id === profile.user_id);
+        return {
+          ...profile,
+          email: authUser?.email || null,
+          last_sign_in_at: authUser?.last_sign_in_at || null,
+          created_at_auth: authUser?.created_at || null,
+        };
+      });
+
+      return {
+        success: true,
+        result: {
+          action: "get",
+          table: "users",
+          data: enrichedUsers,
+          count: enrichedUsers.length,
+          filters: filters || {},
+        },
+      };
+    }
+
+    if (table === "leads") {
+      let query = supabase
+        .from("leads")
+        .select("*, profiles!inner(full_name, affiliate_code)")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (filters?.user_id) {
+        query = query.eq("user_id", filters.user_id);
+      }
+
+      if (filters?.status) {
+        query = query.eq("status", filters.status);
+      }
+
+      if (filters?.created_after) {
+        query = query.gte("created_at", filters.created_after);
+      }
+
+      if (filters?.created_before) {
+        query = query.lte("created_at", filters.created_before);
+      }
+
+      const { data: leads, error } = await query;
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return {
+        success: true,
+        result: {
+          action: "get",
+          table: "leads",
+          data: leads,
+          count: leads.length,
+          filters: filters || {},
+        },
+      };
+    }
+
+    if (table === "payouts") {
+      let query = supabase
+        .from("payouts")
+        .select("*, profiles!inner(full_name, affiliate_code)")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (filters?.user_id) {
+        query = query.eq("user_id", filters.user_id);
+      }
+
+      if (filters?.status) {
+        query = query.eq("status", filters.status);
+      }
+
+      if (filters?.created_after) {
+        query = query.gte("created_at", filters.created_after);
+      }
+
+      if (filters?.created_before) {
+        query = query.lte("created_at", filters.created_before);
+      }
+
+      const { data: payouts, error } = await query;
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return {
+        success: true,
+        result: {
+          action: "get",
+          table: "payouts",
+          data: payouts,
+          count: payouts.length,
+          filters: filters || {},
+        },
+      };
+    }
+
+    if (table === "profiles") {
+      let query = supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (filters?.user_id) {
+        query = query.eq("user_id", filters.user_id);
+      }
+
+      if (filters?.created_after) {
+        query = query.gte("created_at", filters.created_after);
+      }
+
+      if (filters?.created_before) {
+        query = query.lte("created_at", filters.created_before);
+      }
+
+      const { data: profiles, error } = await query;
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return {
+        success: true,
+        result: {
+          action: "get",
+          table: "profiles",
+          data: profiles,
+          count: profiles.length,
+          filters: filters || {},
+        },
+      };
+    }
+
+    return { success: false, error: "Unknown table for get operation" };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: errorMessage };
+  }
+}
 
 // deno-lint-ignore no-explicit-any
 async function handleUserOperation(
