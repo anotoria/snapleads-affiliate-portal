@@ -5,6 +5,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { AffiliateLinkCard } from "@/components/dashboard/AffiliateLinkCard";
+import { PerformanceChart } from "@/components/dashboard/PerformanceChart";
 
 const Dashboard = () => {
   const { profile } = useAuth();
@@ -54,6 +55,9 @@ const Dashboard = () => {
             trend={{ value: 3.1, isPositive: false }}
           />
         </div>
+
+        {/* Performance Chart */}
+        <PerformanceChart isLoading={isLoading} />
 
         {/* Affiliate Link Card */}
         <AffiliateLinkCard />

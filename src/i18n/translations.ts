@@ -34,6 +34,11 @@ type DashboardTranslations = {
   linkCopiedDescription: string;
   copyFailed: string;
   copyFailedDescription: string;
+  performanceOverview: string;
+  last30Days: string;
+  earnings: string;
+  leads: string;
+  clicks: string;
 };
 
 type NavTranslations = {
@@ -47,27 +52,68 @@ type LeadsTranslations = {
   title: string;
   subtitle: string;
   management: string;
-  comingSoon: string;
-  trackingAvailable: string;
-  viewRates: string;
+  searchPlaceholder: string;
+  filterByStatus: string;
+  allStatuses: string;
+  pending: string;
+  converted: string;
+  expired: string;
+  name: string;
+  email: string;
+  status: string;
+  date: string;
+  commission: string;
+  noLeads: string;
+  noLeadsDescription: string;
+  total: string;
+  page: string;
+  of: string;
 };
 
 type PayoutsTranslations = {
   title: string;
   subtitle: string;
-  management: string;
-  comingSoon: string;
-  systemAvailable: string;
-  requestPayouts: string;
+  availableBalance: string;
+  pendingPayouts: string;
+  totalPaid: string;
+  requestPayout: string;
+  payoutHistory: string;
+  date: string;
+  amount: string;
+  status: string;
+  method: string;
+  pending: string;
+  completed: string;
+  processing: string;
+  noPayouts: string;
+  noPayoutsDescription: string;
+  minimumPayout: string;
 };
 
 type SettingsTranslations = {
   title: string;
   subtitle: string;
-  accountSettings: string;
-  comingSoon: string;
-  panelAvailable: string;
-  updateProfile: string;
+  profileSettings: string;
+  profileDescription: string;
+  fullName: string;
+  email: string;
+  affiliateCode: string;
+  saveChanges: string;
+  saving: string;
+  changeAvatar: string;
+  uploadPhoto: string;
+  notificationSettings: string;
+  notificationDescription: string;
+  emailNotifications: string;
+  emailNotificationsDescription: string;
+  leadAlerts: string;
+  leadAlertsDescription: string;
+  payoutNotifications: string;
+  payoutNotificationsDescription: string;
+  profileUpdated: string;
+  profileUpdatedDescription: string;
+  updateFailed: string;
+  updateFailedDescription: string;
 };
 
 export type TranslationKeys = {
@@ -126,6 +172,11 @@ export const translations = {
       linkCopiedDescription: "Your affiliate link has been copied to clipboard.",
       copyFailed: "Failed to copy",
       copyFailedDescription: "Please try copying the link manually.",
+      performanceOverview: "Performance Overview",
+      last30Days: "Last 30 days",
+      earnings: "Earnings",
+      leads: "Leads",
+      clicks: "Clicks",
     },
 
     // Navigation
@@ -141,29 +192,70 @@ export const translations = {
       title: "My Leads",
       subtitle: "Track and manage all your referred leads.",
       management: "Lead Management",
-      comingSoon: "Coming soon in Phase 2",
-      trackingAvailable: "Lead tracking will be available soon",
-      viewRates: "View conversion rates, lead status, and more",
+      searchPlaceholder: "Search by name or email...",
+      filterByStatus: "Filter by status",
+      allStatuses: "All Statuses",
+      pending: "Pending",
+      converted: "Converted",
+      expired: "Expired",
+      name: "Name",
+      email: "Email",
+      status: "Status",
+      date: "Date",
+      commission: "Commission",
+      noLeads: "No leads yet",
+      noLeadsDescription: "Start sharing your affiliate link to get leads",
+      total: "Total",
+      page: "Page",
+      of: "of",
     },
 
     // Payouts Page
     payouts: {
       title: "Payouts",
       subtitle: "View your earnings and payout history.",
-      management: "Payout Management",
-      comingSoon: "Coming soon in Phase 2",
-      systemAvailable: "Payout system will be available soon",
-      requestPayouts: "Request payouts, view history, and set up payment methods",
+      availableBalance: "Available Balance",
+      pendingPayouts: "Pending Payouts",
+      totalPaid: "Total Paid",
+      requestPayout: "Request Payout",
+      payoutHistory: "Payout History",
+      date: "Date",
+      amount: "Amount",
+      status: "Status",
+      method: "Method",
+      pending: "Pending",
+      completed: "Completed",
+      processing: "Processing",
+      noPayouts: "No payouts yet",
+      noPayoutsDescription: "Your payout history will appear here",
+      minimumPayout: "Minimum payout: $50",
     },
 
     // Settings Page
     settings: {
       title: "Settings",
       subtitle: "Manage your account preferences and settings.",
-      accountSettings: "Account Settings",
-      comingSoon: "Coming soon in Phase 2",
-      panelAvailable: "Settings panel will be available soon",
-      updateProfile: "Update profile, notifications, and security settings",
+      profileSettings: "Profile Settings",
+      profileDescription: "Update your personal information",
+      fullName: "Full Name",
+      email: "Email",
+      affiliateCode: "Affiliate Code",
+      saveChanges: "Save Changes",
+      saving: "Saving...",
+      changeAvatar: "Change Avatar",
+      uploadPhoto: "Upload Photo",
+      notificationSettings: "Notification Settings",
+      notificationDescription: "Configure how you receive notifications",
+      emailNotifications: "Email Notifications",
+      emailNotificationsDescription: "Receive email updates about your account",
+      leadAlerts: "Lead Alerts",
+      leadAlertsDescription: "Get notified when you get a new lead",
+      payoutNotifications: "Payout Notifications",
+      payoutNotificationsDescription: "Receive updates about your payouts",
+      profileUpdated: "Profile updated",
+      profileUpdatedDescription: "Your profile has been updated successfully.",
+      updateFailed: "Update failed",
+      updateFailedDescription: "Failed to update profile. Please try again.",
     },
   },
 
@@ -209,6 +301,11 @@ export const translations = {
       linkCopiedDescription: "Seu link de afiliado foi copiado para a área de transferência.",
       copyFailed: "Falha ao copiar",
       copyFailedDescription: "Por favor, tente copiar o link manualmente.",
+      performanceOverview: "Visão de Performance",
+      last30Days: "Últimos 30 dias",
+      earnings: "Ganhos",
+      leads: "Leads",
+      clicks: "Cliques",
     },
 
     // Navigation
@@ -224,29 +321,70 @@ export const translations = {
       title: "Meus Leads",
       subtitle: "Acompanhe e gerencie todos os seus leads indicados.",
       management: "Gestão de Leads",
-      comingSoon: "Em breve na Fase 2",
-      trackingAvailable: "O rastreamento de leads estará disponível em breve",
-      viewRates: "Veja taxas de conversão, status do lead e mais",
+      searchPlaceholder: "Buscar por nome ou email...",
+      filterByStatus: "Filtrar por status",
+      allStatuses: "Todos os Status",
+      pending: "Pendente",
+      converted: "Convertido",
+      expired: "Expirado",
+      name: "Nome",
+      email: "Email",
+      status: "Status",
+      date: "Data",
+      commission: "Comissão",
+      noLeads: "Nenhum lead ainda",
+      noLeadsDescription: "Comece a compartilhar seu link de afiliado para obter leads",
+      total: "Total",
+      page: "Página",
+      of: "de",
     },
 
     // Payouts Page
     payouts: {
       title: "Pagamentos",
       subtitle: "Veja seus ganhos e histórico de pagamentos.",
-      management: "Gestão de Pagamentos",
-      comingSoon: "Em breve na Fase 2",
-      systemAvailable: "O sistema de pagamentos estará disponível em breve",
-      requestPayouts: "Solicite pagamentos, veja histórico e configure métodos de pagamento",
+      availableBalance: "Saldo Disponível",
+      pendingPayouts: "Pagamentos Pendentes",
+      totalPaid: "Total Pago",
+      requestPayout: "Solicitar Pagamento",
+      payoutHistory: "Histórico de Pagamentos",
+      date: "Data",
+      amount: "Valor",
+      status: "Status",
+      method: "Método",
+      pending: "Pendente",
+      completed: "Concluído",
+      processing: "Processando",
+      noPayouts: "Nenhum pagamento ainda",
+      noPayoutsDescription: "Seu histórico de pagamentos aparecerá aqui",
+      minimumPayout: "Pagamento mínimo: $50",
     },
 
     // Settings Page
     settings: {
       title: "Configurações",
       subtitle: "Gerencie suas preferências e configurações de conta.",
-      accountSettings: "Configurações da Conta",
-      comingSoon: "Em breve na Fase 2",
-      panelAvailable: "O painel de configurações estará disponível em breve",
-      updateProfile: "Atualize perfil, notificações e configurações de segurança",
+      profileSettings: "Configurações de Perfil",
+      profileDescription: "Atualize suas informações pessoais",
+      fullName: "Nome Completo",
+      email: "Email",
+      affiliateCode: "Código de Afiliado",
+      saveChanges: "Salvar Alterações",
+      saving: "Salvando...",
+      changeAvatar: "Alterar Avatar",
+      uploadPhoto: "Carregar Foto",
+      notificationSettings: "Configurações de Notificação",
+      notificationDescription: "Configure como você recebe notificações",
+      emailNotifications: "Notificações por Email",
+      emailNotificationsDescription: "Receba atualizações por email sobre sua conta",
+      leadAlerts: "Alertas de Leads",
+      leadAlertsDescription: "Seja notificado quando receber um novo lead",
+      payoutNotifications: "Notificações de Pagamento",
+      payoutNotificationsDescription: "Receba atualizações sobre seus pagamentos",
+      profileUpdated: "Perfil atualizado",
+      profileUpdatedDescription: "Seu perfil foi atualizado com sucesso.",
+      updateFailed: "Falha na atualização",
+      updateFailedDescription: "Falha ao atualizar perfil. Por favor, tente novamente.",
     },
   },
 
@@ -292,6 +430,11 @@ export const translations = {
       linkCopiedDescription: "Tu enlace de afiliado se ha copiado al portapapeles.",
       copyFailed: "Error al copiar",
       copyFailedDescription: "Por favor, intenta copiar el enlace manualmente.",
+      performanceOverview: "Resumen de Rendimiento",
+      last30Days: "Últimos 30 días",
+      earnings: "Ganancias",
+      leads: "Leads",
+      clicks: "Clics",
     },
 
     // Navigation
@@ -307,29 +450,70 @@ export const translations = {
       title: "Mis Leads",
       subtitle: "Rastrea y gestiona todos tus leads referidos.",
       management: "Gestión de Leads",
-      comingSoon: "Próximamente en Fase 2",
-      trackingAvailable: "El seguimiento de leads estará disponible pronto",
-      viewRates: "Ver tasas de conversión, estado del lead y más",
+      searchPlaceholder: "Buscar por nombre o email...",
+      filterByStatus: "Filtrar por estado",
+      allStatuses: "Todos los Estados",
+      pending: "Pendiente",
+      converted: "Convertido",
+      expired: "Expirado",
+      name: "Nombre",
+      email: "Email",
+      status: "Estado",
+      date: "Fecha",
+      commission: "Comisión",
+      noLeads: "Sin leads aún",
+      noLeadsDescription: "Comienza a compartir tu enlace de afiliado para obtener leads",
+      total: "Total",
+      page: "Página",
+      of: "de",
     },
 
     // Payouts Page
     payouts: {
       title: "Pagos",
       subtitle: "Ve tus ganancias e historial de pagos.",
-      management: "Gestión de Pagos",
-      comingSoon: "Próximamente en Fase 2",
-      systemAvailable: "El sistema de pagos estará disponible pronto",
-      requestPayouts: "Solicita pagos, ve el historial y configura métodos de pago",
+      availableBalance: "Saldo Disponible",
+      pendingPayouts: "Pagos Pendientes",
+      totalPaid: "Total Pagado",
+      requestPayout: "Solicitar Pago",
+      payoutHistory: "Historial de Pagos",
+      date: "Fecha",
+      amount: "Monto",
+      status: "Estado",
+      method: "Método",
+      pending: "Pendiente",
+      completed: "Completado",
+      processing: "Procesando",
+      noPayouts: "Sin pagos aún",
+      noPayoutsDescription: "Tu historial de pagos aparecerá aquí",
+      minimumPayout: "Pago mínimo: $50",
     },
 
     // Settings Page
     settings: {
       title: "Configuración",
       subtitle: "Gestiona tus preferencias y configuraciones de cuenta.",
-      accountSettings: "Configuración de Cuenta",
-      comingSoon: "Próximamente en Fase 2",
-      panelAvailable: "El panel de configuración estará disponible pronto",
-      updateProfile: "Actualiza perfil, notificaciones y configuraciones de seguridad",
+      profileSettings: "Configuración de Perfil",
+      profileDescription: "Actualiza tu información personal",
+      fullName: "Nombre Completo",
+      email: "Email",
+      affiliateCode: "Código de Afiliado",
+      saveChanges: "Guardar Cambios",
+      saving: "Guardando...",
+      changeAvatar: "Cambiar Avatar",
+      uploadPhoto: "Subir Foto",
+      notificationSettings: "Configuración de Notificaciones",
+      notificationDescription: "Configura cómo recibes notificaciones",
+      emailNotifications: "Notificaciones por Email",
+      emailNotificationsDescription: "Recibe actualizaciones por email sobre tu cuenta",
+      leadAlerts: "Alertas de Leads",
+      leadAlertsDescription: "Recibe notificaciones cuando obtengas un nuevo lead",
+      payoutNotifications: "Notificaciones de Pago",
+      payoutNotificationsDescription: "Recibe actualizaciones sobre tus pagos",
+      profileUpdated: "Perfil actualizado",
+      profileUpdatedDescription: "Tu perfil se ha actualizado correctamente.",
+      updateFailed: "Error al actualizar",
+      updateFailedDescription: "Error al actualizar perfil. Por favor, intenta de nuevo.",
     },
   },
 } satisfies Record<Language, TranslationKeys>;
