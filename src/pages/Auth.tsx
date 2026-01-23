@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Logo } from "@/components/Logo";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type LoginFormData = {
   email: string;
@@ -29,22 +30,31 @@ type ResetFormData = {
   email: string;
 };
 
-type AuthMode = "login" | "signup" | "reset";
+type ChangePasswordFormData = {
+  newPassword: string;
+  confirmNewPassword: string;
+};
+
+type AuthMode = "login" | "signup" | "reset" | "change-password";
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, signUp, resetPassword, session } = useAuth();
+  const { signIn, signUp, resetPassword, changePassword, session, mustChangePassword } = useAuth();
   const { t } = useLanguage();
   const { toast } = useToast();
 
-  // Redirect if already authenticated
+  // Handle authentication state and password change requirement
   useEffect(() => {
     if (session) {
-      navigate("/");
+      if (mustChangePassword) {
+        setMode("change-password");
+      } else if (mode !== "change-password") {
+        navigate("/");
+      }
     }
-  }, [session, navigate]);
+  }, [session, mustChangePassword, navigate, mode]);
 
   const loginSchema = z.object({
     email: z.string().email(t.auth.email),
@@ -65,6 +75,14 @@ const Auth = () => {
     email: z.string().email(t.auth.email),
   });
 
+  const changePasswordSchema = z.object({
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmNewPassword: z.string(),
+  }).refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "Passwords don't match",
+    path: ["confirmNewPassword"],
+  });
+
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -78,6 +96,11 @@ const Auth = () => {
   const resetForm = useForm<ResetFormData>({
     resolver: zodResolver(resetSchema),
     defaultValues: { email: "" },
+  });
+
+  const changePasswordForm = useForm<ChangePasswordFormData>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { newPassword: "", confirmNewPassword: "" },
   });
 
   const handleLogin = async (data: LoginFormData) => {
@@ -98,7 +121,6 @@ const Auth = () => {
         title: t.auth.welcomeBack + "!",
         description: "You have successfully logged in.",
       });
-      navigate("/");
     }
   };
 
@@ -144,6 +166,26 @@ const Auth = () => {
     }
   };
 
+  const handleChangePassword = async (data: ChangePasswordFormData) => {
+    setIsLoading(true);
+    const { error } = await changePassword(data.newPassword);
+    setIsLoading(false);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Password change failed",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "Password updated!",
+        description: "Your password has been changed successfully.",
+      });
+      navigate("/");
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary/30 px-4">
       <Card className="w-full max-w-md animate-fade-in border-border/50 shadow-card">
@@ -156,16 +198,70 @@ const Auth = () => {
               {mode === "login" && t.auth.welcomeBack}
               {mode === "signup" && t.auth.createAccount}
               {mode === "reset" && t.auth.resetPassword}
+              {mode === "change-password" && "Change Password"}
             </CardTitle>
             <CardDescription className="mt-2 text-muted-foreground">
               {mode === "login" && t.auth.signInToContinue}
               {mode === "signup" && t.auth.startEarning}
               {mode === "reset" && t.auth.resetPasswordDescription}
+              {mode === "change-password" && "Please set a new password to continue"}
             </CardDescription>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {mode === "change-password" && (
+            <>
+              <Alert className="border-amber-500/50 bg-amber-500/10">
+                <ShieldAlert className="h-4 w-4 text-amber-500" />
+                <AlertDescription className="text-amber-700 dark:text-amber-300">
+                  Your account requires a password change before you can continue.
+                </AlertDescription>
+              </Alert>
+
+              <form onSubmit={changePasswordForm.handleSubmit(handleChangePassword)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      className="pl-10"
+                      {...changePasswordForm.register("newPassword")}
+                    />
+                  </div>
+                  {changePasswordForm.formState.errors.newPassword && (
+                    <p className="text-sm text-destructive">{changePasswordForm.formState.errors.newPassword.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmNewPassword" className="text-foreground">Confirm New Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="confirmNewPassword"
+                      type="password"
+                      placeholder="••••••••"
+                      className="pl-10"
+                      {...changePasswordForm.register("confirmNewPassword")}
+                    />
+                  </div>
+                  {changePasswordForm.formState.errors.confirmNewPassword && (
+                    <p className="text-sm text-destructive">{changePasswordForm.formState.errors.confirmNewPassword.message}</p>
+                  )}
+                </div>
+
+                <GradientButton type="submit" isLoading={isLoading}>
+                  Update Password
+                  <ArrowRight className="h-4 w-4" />
+                </GradientButton>
+              </form>
+            </>
+          )}
+
           {mode === "login" && (
             <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
               <div className="space-y-2">
@@ -330,7 +426,7 @@ const Auth = () => {
             </form>
           )}
 
-          {mode !== "reset" && (
+          {mode !== "reset" && mode !== "change-password" && (
             <div className="text-center text-sm text-muted-foreground">
               {mode === "login" ? (
                 <>
