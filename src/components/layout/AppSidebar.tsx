@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Wallet, Settings } from "lucide-react";
+import { LayoutDashboard, Users, Wallet, Settings, TrendingUp, FileText, FolderOpen, HelpCircle } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { Logo } from "@/components/Logo";
@@ -29,6 +29,10 @@ export const AppSidebar = () => {
     { title: t.nav.dashboard, url: "/", icon: LayoutDashboard },
     { title: t.nav.myLeads, url: "/leads", icon: Users },
     { title: t.nav.payouts, url: "/payouts", icon: Wallet },
+    { title: t.nav.commissions, url: "/commissions", icon: TrendingUp },
+    { title: t.nav.reports, url: "/reports", icon: FileText },
+    { title: t.nav.documents, url: "/documents", icon: FolderOpen },
+    { title: t.nav.support, url: "/support", icon: HelpCircle },
     { title: t.nav.settings, url: "/settings", icon: Settings },
   ];
   
