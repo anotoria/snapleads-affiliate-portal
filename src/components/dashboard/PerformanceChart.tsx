@@ -1,30 +1,10 @@
-import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/hooks/useLanguage";
+import { usePerformanceData } from "@/hooks/useDashboardMetrics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { TrendingUp } from "lucide-react";
-
-// Generate mock data for the last 30 days
-const generateChartData = () => {
-  const data = [];
-  const today = new Date();
-  
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    
-    data.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      earnings: Math.floor(Math.random() * 150) + 20,
-      leads: Math.floor(Math.random() * 8) + 1,
-      clicks: Math.floor(Math.random() * 100) + 30,
-    });
-  }
-  
-  return data;
-};
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
+import { TrendingUp, Loader2 } from "lucide-react";
 
 const chartConfig = {
   earnings: {
@@ -35,19 +15,17 @@ const chartConfig = {
     label: "Leads",
     color: "hsl(var(--primary))",
   },
-  clicks: {
-    label: "Clicks",
-    color: "hsl(var(--brand-magenta))",
-  },
 };
 
-interface PerformanceChartProps {
-  isLoading?: boolean;
-}
-
-export const PerformanceChart = ({ isLoading = false }: PerformanceChartProps) => {
+export const PerformanceChart = () => {
   const { t } = useLanguage();
-  const data = useMemo(() => generateChartData(), []);
+  const { data: rawData = [], isLoading } = usePerformanceData();
+
+  // Format data for display
+  const data = rawData.map((item) => ({
+    ...item,
+    date: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+  }));
 
   if (isLoading) {
     return (
@@ -56,8 +34,8 @@ export const PerformanceChart = ({ isLoading = false }: PerformanceChartProps) =
           <div className="h-6 w-48 bg-muted animate-pulse rounded" />
           <div className="h-4 w-32 bg-muted animate-pulse rounded mt-2" />
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <div className="h-[250px] sm:h-[300px] bg-muted animate-pulse rounded" />
+        <CardContent className="px-4 sm:px-6 flex items-center justify-center h-[250px] sm:h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </CardContent>
       </Card>
     );
@@ -94,10 +72,6 @@ export const PerformanceChart = ({ isLoading = false }: PerformanceChartProps) =
                 <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-primary" />
                 <span className="text-muted-foreground">{t.dashboard.leads}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-brand-magenta" />
-                <span className="text-muted-foreground">{t.dashboard.clicks}</span>
-              </div>
             </div>
           </div>
         </CardHeader>
@@ -112,10 +86,6 @@ export const PerformanceChart = ({ isLoading = false }: PerformanceChartProps) =
                 <linearGradient id="fillLeads" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="fillClicks" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--brand-magenta))" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(var(--brand-magenta))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
@@ -148,13 +118,6 @@ export const PerformanceChart = ({ isLoading = false }: PerformanceChartProps) =
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
                 fill="url(#fillLeads)"
-              />
-              <Area
-                type="monotone"
-                dataKey="clicks"
-                stroke="hsl(var(--brand-magenta))"
-                strokeWidth={2}
-                fill="url(#fillClicks)"
               />
             </AreaChart>
           </ChartContainer>
