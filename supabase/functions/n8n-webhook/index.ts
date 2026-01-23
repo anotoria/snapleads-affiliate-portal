@@ -624,7 +624,7 @@ function validateTableData(table: string, data: Record<string, unknown>): { data
       }
       
       if (data.status !== undefined) {
-        const validStatuses = ["pending", "contacted", "qualified", "converted", "lost"];
+        const validStatuses = ["pending", "late_payment", "active", "inactive"];
         if (!validStatuses.includes(String(data.status))) {
           return { error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` };
         }

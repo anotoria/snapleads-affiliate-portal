@@ -49,10 +49,11 @@ export const LeadsTable = () => {
   );
   
   const getStatusBadge = (status: LeadStatus) => {
-    const variants: Record<LeadStatus, { variant: "default" | "secondary" | "destructive"; label: string }> = {
+    const variants: Record<LeadStatus, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
       pending: { variant: "secondary", label: t.leads.pending },
-      converted: { variant: "default", label: t.leads.converted },
-      expired: { variant: "destructive", label: t.leads.expired },
+      late_payment: { variant: "destructive", label: t.leads.late_payment },
+      active: { variant: "default", label: t.leads.active },
+      inactive: { variant: "outline", label: t.leads.inactive },
     };
     
     return (
@@ -126,8 +127,9 @@ export const LeadsTable = () => {
                 <SelectContent>
                   <SelectItem value="all">{t.leads.allStatuses}</SelectItem>
                   <SelectItem value="pending">{t.leads.pending}</SelectItem>
-                  <SelectItem value="converted">{t.leads.converted}</SelectItem>
-                  <SelectItem value="expired">{t.leads.expired}</SelectItem>
+                  <SelectItem value="late_payment">{t.leads.late_payment}</SelectItem>
+                  <SelectItem value="active">{t.leads.active}</SelectItem>
+                  <SelectItem value="inactive">{t.leads.inactive}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
