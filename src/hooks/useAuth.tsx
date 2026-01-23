@@ -9,6 +9,11 @@ interface Profile {
   avatar_url: string | null;
   affiliate_code: string | null;
   must_change_password: boolean;
+  company_name: string | null;
+  cnpj: string | null;
+  phone: string | null;
+  tier_level: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

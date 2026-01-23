@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PartnerStatusWidget } from "@/components/sidebar/PartnerStatusWidget";
 import {
   Sidebar,
   SidebarContent,
@@ -63,6 +64,13 @@ export const AppSidebar = () => {
       </SidebarHeader>
 
       <SidebarContent className="p-2">
+        {/* Partner Status Widget */}
+        {!collapsed && (
+          <div className="mb-4">
+            <PartnerStatusWidget collapsed={collapsed} />
+          </div>
+        )}
+
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>

@@ -1,13 +1,26 @@
-import { DollarSign, Users, MousePointerClick } from "lucide-react";
+import { Users, DollarSign, BarChart3, TrendingUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { PartnerLevelCard } from "@/components/dashboard/PartnerLevelCard";
+import { TierProgressCard } from "@/components/dashboard/TierProgressCard";
 import { AffiliateLinkCard } from "@/components/dashboard/AffiliateLinkCard";
 import { LeadsPerformanceChart } from "@/components/dashboard/LeadsPerformanceChart";
 import { EarningsPerformanceChart } from "@/components/dashboard/EarningsPerformanceChart";
+import { CommissionsChart } from "@/components/dashboard/CommissionsChart";
+import { PartnerSummaryCard } from "@/components/dashboard/PartnerSummaryCard";
 import { PageTransition } from "@/components/animations/PageTransition";
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
 
 const Dashboard = () => {
   const { profile } = useAuth();
@@ -21,50 +34,67 @@ const Dashboard = () => {
           {/* Welcome Section */}
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              {t.dashboard.hello}, {profile?.full_name?.split(" ")[0] || "there"} 👋
+              {t.dashboard.partnerDashboard}
             </h1>
             <p className="mt-1 text-sm sm:text-base text-muted-foreground">
-              {t.dashboard.welcomeMessage}
+              {t.dashboard.dashboardSubtitle}
             </p>
           </div>
 
-          {/* Metrics Grid */}
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Metrics Grid - 4 cards like reference */}
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
-              title={t.dashboard.totalEarnings}
-              value={`$${(metrics?.totalEarnings ?? 0).toFixed(2)}`}
-              icon={<DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-success" />}
-              isLoading={isLoading}
-              trend={{ 
-                value: Math.abs(metrics?.earningsChange ?? 0), 
-                isPositive: (metrics?.earningsChange ?? 0) >= 0 
-              }}
-              delay={0}
-            />
-            <MetricCard
-              title={t.dashboard.activeLeads}
+              title={t.dashboard.activeClients}
               value={String(metrics?.activeLeads ?? 0)}
               icon={<Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />}
               isLoading={isLoading}
-              trend={{ 
-                value: Math.abs(metrics?.leadsChange ?? 0), 
-                isPositive: (metrics?.leadsChange ?? 0) >= 0 
-              }}
+              trend={metrics?.leadsChange ? { 
+                value: Math.abs(metrics.leadsChange), 
+                isPositive: metrics.leadsChange >= 0,
+                label: t.dashboard.increase
+              } : undefined}
+              delay={0}
+            />
+            <MetricCard
+              title={t.dashboard.monthlyRevenue}
+              value={formatCurrency(metrics?.monthlyRevenue ?? 0)}
+              icon={<BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />}
+              isLoading={isLoading}
+              trend={metrics?.monthlyRevenueChange ? { 
+                value: Math.abs(metrics.monthlyRevenueChange), 
+                isPositive: metrics.monthlyRevenueChange >= 0,
+                label: t.dashboard.increase
+              } : undefined}
               delay={0.1}
             />
             <MetricCard
-              title={t.dashboard.inactiveLeads}
-              value={String(metrics?.inactiveLeads ?? 0)}
-              icon={<MousePointerClick className="h-5 w-5 sm:h-6 sm:w-6 text-brand-magenta" />}
+              title={t.dashboard.currentCommission}
+              value={formatCurrency(metrics?.currentCommission ?? 0)}
+              icon={<DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-success" />}
               isLoading={isLoading}
+              trend={metrics?.commissionChange ? { 
+                value: Math.abs(metrics.commissionChange), 
+                isPositive: metrics.commissionChange >= 0,
+                label: t.dashboard.increase
+              } : undefined}
               delay={0.2}
             />
+            <PartnerLevelCard delay={0.3} />
           </div>
 
-          {/* Performance Charts - stacked vertically */}
+          {/* Tier Progress Card */}
+          <TierProgressCard />
+
+          {/* Performance Charts */}
           <div className="flex flex-col gap-6">
             <LeadsPerformanceChart />
             <EarningsPerformanceChart />
+          </div>
+
+          {/* Partner Summary + Commissions Chart */}
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            <PartnerSummaryCard />
+            <CommissionsChart />
           </div>
 
           {/* Affiliate Link Card */}
