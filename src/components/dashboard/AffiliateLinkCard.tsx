@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Copy, Check, Link } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -8,26 +9,27 @@ import { useToast } from "@/hooks/use-toast";
 export const AffiliateLinkCard = () => {
   const [copied, setCopied] = useState(false);
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
 
   const affiliateLink = profile?.affiliate_code
     ? `snapleads.com/${profile.affiliate_code}`
-    : "snapleads.com/ref/loading...";
+    : `snapleads.com/ref/${t.loading}`;
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(`https://${affiliateLink}`);
       setCopied(true);
       toast({
-        title: "Link copied!",
-        description: "Your affiliate link has been copied to clipboard.",
+        title: t.dashboard.linkCopied,
+        description: t.dashboard.linkCopiedDescription,
       });
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast({
         variant: "destructive",
-        title: "Failed to copy",
-        description: "Please try copying the link manually.",
+        title: t.dashboard.copyFailed,
+        description: t.dashboard.copyFailedDescription,
       });
     }
   };
@@ -41,8 +43,8 @@ export const AffiliateLinkCard = () => {
             <Link className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-lg text-foreground">Your Affiliate Link</CardTitle>
-            <CardDescription>Share this link to earn commissions</CardDescription>
+            <CardTitle className="text-lg text-foreground">{t.dashboard.yourAffiliateLink}</CardTitle>
+            <CardDescription>{t.dashboard.shareToEarn}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -60,18 +62,18 @@ export const AffiliateLinkCard = () => {
             {copied ? (
               <>
                 <Check className="h-4 w-4 text-success" />
-                Copied
+                {t.copied}
               </>
             ) : (
               <>
                 <Copy className="h-4 w-4" />
-                Copy
+                {t.copy}
               </>
             )}
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Earn up to 30% commission for every customer who signs up through your link.
+          {t.dashboard.earnCommission}
         </p>
       </CardContent>
     </Card>

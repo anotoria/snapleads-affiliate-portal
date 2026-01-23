@@ -2,6 +2,7 @@ import { LayoutDashboard, Users, Wallet, Settings } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { Logo } from "@/components/Logo";
+import { useLanguage } from "@/hooks/useLanguage";
 import {
   Sidebar,
   SidebarContent,
@@ -15,17 +16,18 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const navItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "My Leads", url: "/leads", icon: Users },
-  { title: "Payouts", url: "/payouts", icon: Wallet },
-  { title: "Settings", url: "/settings", icon: Settings },
-];
-
 export const AppSidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { title: t.nav.dashboard, url: "/", icon: LayoutDashboard },
+    { title: t.nav.myLeads, url: "/leads", icon: Users },
+    { title: t.nav.payouts, url: "/payouts", icon: Wallet },
+    { title: t.nav.settings, url: "/settings", icon: Settings },
+  ];
   
   const isActive = (path: string) => {
     if (path === "/") {
@@ -48,7 +50,7 @@ export const AppSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     asChild
                     isActive={isActive(item.url)}

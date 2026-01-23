@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Logo } from "@/components/Logo";
 import { GradientButton } from "@/components/GradientButton";
 import { Input } from "@/components/ui/input";
@@ -12,28 +13,21 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
+type LoginFormData = {
+  email: string;
+  password: string;
+};
 
-const signUpSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+type SignUpFormData = {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
-const resetSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-type SignUpFormData = z.infer<typeof signUpSchema>;
-type ResetFormData = z.infer<typeof resetSchema>;
+type ResetFormData = {
+  email: string;
+};
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -42,6 +36,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, signUp, resetPassword, session } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
 
   // Redirect if already authenticated
@@ -50,6 +45,25 @@ const Auth = () => {
       navigate("/");
     }
   }, [session, navigate]);
+
+  const loginSchema = z.object({
+    email: z.string().email(t.auth.email),
+    password: z.string().min(6, t.auth.password),
+  });
+
+  const signUpSchema = z.object({
+    fullName: z.string().min(2, t.auth.fullName),
+    email: z.string().email(t.auth.email),
+    password: z.string().min(6, t.auth.password),
+    confirmPassword: z.string(),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+  const resetSchema = z.object({
+    email: z.string().email(t.auth.email),
+  });
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -81,7 +95,7 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: "Welcome back!",
+        title: t.auth.welcomeBack + "!",
         description: "You have successfully logged in.",
       });
       navigate("/");
@@ -103,7 +117,7 @@ const Auth = () => {
       });
     } else {
       toast({
-        title: "Account created!",
+        title: t.auth.createAccount + "!",
         description: "Welcome to SnapLeads. You can now start earning.",
       });
       navigate("/");
@@ -139,14 +153,14 @@ const Auth = () => {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">
-              {mode === "login" && "Welcome back"}
-              {mode === "signup" && "Create your account"}
-              {mode === "reset" && "Reset your password"}
+              {mode === "login" && t.auth.welcomeBack}
+              {mode === "signup" && t.auth.createAccount}
+              {mode === "reset" && t.auth.resetPassword}
             </CardTitle>
             <CardDescription className="mt-2 text-muted-foreground">
-              {mode === "login" && "Sign in to access your affiliate dashboard"}
-              {mode === "signup" && "Start earning with SnapLeads today"}
-              {mode === "reset" && "Enter your email to receive a reset link"}
+              {mode === "login" && t.auth.signInToContinue}
+              {mode === "signup" && t.auth.startEarning}
+              {mode === "reset" && t.auth.resetPasswordDescription}
             </CardDescription>
           </div>
         </CardHeader>
@@ -155,7 +169,7 @@ const Auth = () => {
           {mode === "login" && (
             <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground">Email</Label>
+                <Label htmlFor="email" className="text-foreground">{t.auth.email}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -172,7 +186,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground">Password</Label>
+                <Label htmlFor="password" className="text-foreground">{t.auth.password}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -194,12 +208,12 @@ const Auth = () => {
                   onClick={() => setMode("reset")}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Forgot password?
+                  {t.auth.forgotPassword}
                 </button>
               </div>
 
               <GradientButton type="submit" isLoading={isLoading}>
-                Sign In
+                {t.auth.signIn}
                 <ArrowRight className="h-4 w-4" />
               </GradientButton>
             </form>
@@ -208,7 +222,7 @@ const Auth = () => {
           {mode === "signup" && (
             <form onSubmit={signUpForm.handleSubmit(handleSignUp)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-foreground">Full Name</Label>
+                <Label htmlFor="fullName" className="text-foreground">{t.auth.fullName}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -225,7 +239,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signupEmail" className="text-foreground">Email</Label>
+                <Label htmlFor="signupEmail" className="text-foreground">{t.auth.email}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -242,7 +256,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signupPassword" className="text-foreground">Password</Label>
+                <Label htmlFor="signupPassword" className="text-foreground">{t.auth.password}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -259,7 +273,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="text-foreground">{t.auth.password}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -276,7 +290,7 @@ const Auth = () => {
               </div>
 
               <GradientButton type="submit" isLoading={isLoading}>
-                Create Account
+                {t.auth.signUp}
                 <ArrowRight className="h-4 w-4" />
               </GradientButton>
             </form>
@@ -285,7 +299,7 @@ const Auth = () => {
           {mode === "reset" && (
             <form onSubmit={resetForm.handleSubmit(handleResetPassword)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="resetEmail" className="text-foreground">Email</Label>
+                <Label htmlFor="resetEmail" className="text-foreground">{t.auth.email}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -302,7 +316,7 @@ const Auth = () => {
               </div>
 
               <GradientButton type="submit" isLoading={isLoading}>
-                Send Reset Link
+                {t.auth.sendResetLink}
                 <ArrowRight className="h-4 w-4" />
               </GradientButton>
 
@@ -311,7 +325,7 @@ const Auth = () => {
                 onClick={() => setMode("login")}
                 className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                Back to login
+                {t.auth.cancel}
               </button>
             </form>
           )}
@@ -320,24 +334,24 @@ const Auth = () => {
             <div className="text-center text-sm text-muted-foreground">
               {mode === "login" ? (
                 <>
-                  Don't have an account?{" "}
+                  {t.auth.noAccount}{" "}
                   <button
                     type="button"
                     onClick={() => setMode("signup")}
                     className="font-medium text-foreground hover:underline"
                   >
-                    Sign up
+                    {t.auth.signUp}
                   </button>
                 </>
               ) : (
                 <>
-                  Already have an account?{" "}
+                  {t.auth.hasAccount}{" "}
                   <button
                     type="button"
                     onClick={() => setMode("login")}
                     className="font-medium text-foreground hover:underline"
                   >
-                    Sign in
+                    {t.auth.signIn}
                   </button>
                 </>
               )}
