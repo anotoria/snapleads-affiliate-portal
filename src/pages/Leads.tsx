@@ -1,7 +1,6 @@
-import { Users } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/hooks/useLanguage";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LeadsTable } from "@/components/leads/LeadsTable";
 
 const Leads = () => {
   const { t } = useLanguage();
@@ -16,32 +15,7 @@ const Leads = () => {
           </p>
         </div>
 
-        <Card className="border-border/50 shadow-card">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle>{t.leads.management}</CardTitle>
-                <CardDescription>{t.leads.comingSoon}</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex min-h-[300px] items-center justify-center rounded-lg border-2 border-dashed border-border bg-accent/30">
-              <div className="text-center">
-                <Users className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                <p className="mt-4 text-lg font-medium text-muted-foreground">
-                  {t.leads.trackingAvailable}
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground/70">
-                  {t.leads.viewRates}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <LeadsTable />
       </div>
     </AppLayout>
   );
