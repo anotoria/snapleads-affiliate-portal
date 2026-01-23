@@ -8,6 +8,7 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   affiliate_code: string | null;
+  must_change_password: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -17,10 +18,13 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   isLoading: boolean;
+  mustChangePassword: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  changePassword: (newPassword: string) => Promise<{ error: Error | null }>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +34,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const mustChangePassword = profile?.must_change_password ?? false;
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -50,14 +56,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const refreshProfile = async () => {
+    if (user) {
+      const profileData = await fetchProfile(user.id);
+      setProfile(profileData);
+    }
+  };
+
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer profile fetch with setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
             fetchProfile(session.user.id).then(setProfile);
@@ -68,7 +79,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -124,6 +134,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error: error as Error | null };
   };
 
+  const changePassword = async (newPassword: string) => {
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) {
+      return { error: updateError as Error };
+    }
+
+    // Clear the must_change_password flag
+    if (user) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ must_change_password: false })
+        .eq("user_id", user.id);
+
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+      }
+
+      // Refresh profile to get updated state
+      await refreshProfile();
+    }
+
+    return { error: null };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -131,10 +168,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         profile,
         isLoading,
+        mustChangePassword,
         signIn,
         signUp,
         signOut,
         resetPassword,
+        changePassword,
+        refreshProfile,
       }}
     >
       {children}

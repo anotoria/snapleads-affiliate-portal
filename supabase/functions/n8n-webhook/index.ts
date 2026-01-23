@@ -22,19 +22,26 @@ const sanitizeString = (str: string, maxLength: number = 255): string => {
 
 interface WebhookPayload {
   action: "insert" | "update" | "upsert";
-  table: "profiles" | "leads" | "payouts";
+  table: "profiles" | "leads" | "payouts" | "users";
   data: Record<string, unknown>;
-  match?: Record<string, unknown>; // For updates - which record to match
+  match?: Record<string, unknown>;
 }
 
+interface UserData {
+  email: string;
+  password?: string;
+  full_name?: string;
+  affiliate_code?: string;
+}
+
+const DEFAULT_TEMP_PASSWORD = "TempPass123!";
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validate webhook secret
     const webhookSecret = req.headers.get("x-webhook-secret");
     const expectedSecret = Deno.env.get("N8N_WEBHOOK_SECRET");
 
@@ -46,11 +53,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse request body
     const payload: WebhookPayload = await req.json();
     console.log("Received webhook payload:", JSON.stringify(payload, null, 2));
 
-    // Validate required fields
     if (!payload.action || !payload.table || !payload.data) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: action, table, data" }),
@@ -58,7 +63,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate action
     if (!["insert", "update", "upsert"].includes(payload.action)) {
       return new Response(
         JSON.stringify({ error: "Invalid action. Must be: insert, update, or upsert" }),
@@ -66,24 +70,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate table
-    if (!["profiles", "leads", "payouts"].includes(payload.table)) {
+    if (!["profiles", "leads", "payouts", "users"].includes(payload.table)) {
       return new Response(
-        JSON.stringify({ error: "Invalid table. Must be: profiles, leads, or payouts" }),
+        JSON.stringify({ error: "Invalid table. Must be: profiles, leads, payouts, or users" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Create Supabase client with service role for admin operations
-    const supabase = createClient(
+    // deno-lint-ignore no-explicit-any
+    const supabase = createClient<any>(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    let result;
     const { action, table, data, match } = payload;
 
-    // Validate and sanitize data based on table
+    // Handle users table separately (uses Auth Admin API)
+    if (table === "users") {
+      const userData: UserData = {
+        email: String(data.email || ""),
+        password: data.password ? String(data.password) : undefined,
+        full_name: data.full_name ? String(data.full_name) : undefined,
+        affiliate_code: data.affiliate_code ? String(data.affiliate_code) : undefined,
+      };
+      const result = await handleUserOperation(supabase, action, userData, match);
+      return new Response(
+        JSON.stringify(result),
+        { status: result.success ? 200 : 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate and sanitize data for other tables
     const validatedData = validateTableData(table, data);
     if (validatedData.error) {
       return new Response(
@@ -91,6 +108,8 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    let result;
 
     switch (action) {
       case "insert": {
@@ -115,7 +134,6 @@ Deno.serve(async (req) => {
 
         let query = supabase.from(table).update(validatedData.data);
         
-        // Apply match conditions
         for (const [key, value] of Object.entries(match)) {
           query = query.eq(key, value);
         }
@@ -156,6 +174,160 @@ Deno.serve(async (req) => {
   }
 });
 
+// deno-lint-ignore no-explicit-any
+async function handleUserOperation(
+  supabase: any,
+  action: string,
+  data: UserData,
+  match?: Record<string, unknown>
+): Promise<{ success: boolean; result?: unknown; error?: string }> {
+  
+  // Validate email
+  if (data.email && !isValidEmail(data.email)) {
+    return { success: false, error: "Invalid email format" };
+  }
+
+  if (action === "insert") {
+    // Create user via Auth Admin API
+    if (!data.email) {
+      return { success: false, error: "Email is required to create a user" };
+    }
+
+    const password = data.password || DEFAULT_TEMP_PASSWORD;
+    
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: data.email,
+      password: password,
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        full_name: data.full_name || data.email.split('@')[0],
+      },
+    });
+
+    if (authError) {
+      console.error("Error creating user:", authError);
+      return { success: false, error: authError.message };
+    }
+
+    // Update profile with must_change_password flag
+    if (authData.user) {
+      const profileUpdate: Record<string, unknown> = {
+        must_change_password: true,
+      };
+      
+      if (data.full_name) {
+        profileUpdate.full_name = sanitizeString(data.full_name, 100);
+      }
+      
+      if (data.affiliate_code) {
+        profileUpdate.affiliate_code = sanitizeString(data.affiliate_code, 50);
+      }
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update(profileUpdate)
+        .eq("user_id", authData.user.id);
+
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+      }
+    }
+
+    console.log("User created successfully:", authData.user?.id);
+    return {
+      success: true,
+      result: {
+        action: "user_created",
+        user_id: authData.user?.id,
+        email: authData.user?.email,
+        must_change_password: true,
+      },
+    };
+  }
+
+  if (action === "update") {
+    // Update user via Auth Admin API
+    if (!match?.user_id && !match?.email) {
+      return { success: false, error: "Update requires 'match.user_id' or 'match.email' to identify user" };
+    }
+
+    let userId = match.user_id as string | undefined;
+
+    // If matching by email, find the user first
+    if (!userId && match.email) {
+      const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+      if (listError) {
+        return { success: false, error: listError.message };
+      }
+      // deno-lint-ignore no-explicit-any
+      const foundUser = users.users.find((u: any) => u.email === match.email);
+      if (!foundUser) {
+        return { success: false, error: "User not found with provided email" };
+      }
+      userId = foundUser.id;
+    }
+
+    if (!userId || !isValidUUID(userId)) {
+      return { success: false, error: "Invalid user_id format" };
+    }
+
+    // Update auth user if email or password provided
+    const authUpdates: { email?: string; password?: string; user_metadata?: Record<string, unknown> } = {};
+    
+    if (data.email) {
+      authUpdates.email = data.email;
+    }
+    
+    if (data.password) {
+      authUpdates.password = data.password;
+    }
+
+    if (data.full_name) {
+      authUpdates.user_metadata = { full_name: data.full_name };
+    }
+
+    if (Object.keys(authUpdates).length > 0) {
+      const { error: authError } = await supabase.auth.admin.updateUserById(userId, authUpdates);
+      if (authError) {
+        return { success: false, error: authError.message };
+      }
+    }
+
+    // Update profile if needed
+    const profileUpdate: Record<string, unknown> = {};
+    
+    if (data.full_name) {
+      profileUpdate.full_name = sanitizeString(data.full_name, 100);
+    }
+    
+    if (data.affiliate_code) {
+      profileUpdate.affiliate_code = sanitizeString(data.affiliate_code, 50);
+    }
+
+    if (Object.keys(profileUpdate).length > 0) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update(profileUpdate)
+        .eq("user_id", userId);
+
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+      }
+    }
+
+    console.log("User updated successfully:", userId);
+    return {
+      success: true,
+      result: {
+        action: "user_updated",
+        user_id: userId,
+      },
+    };
+  }
+
+  return { success: false, error: "Invalid action for users. Must be: insert or update" };
+}
+
 function getConflictColumn(table: string): string {
   switch (table) {
     case "profiles":
@@ -192,6 +364,10 @@ function validateTableData(table: string, data: Record<string, unknown>): { data
       if (data.affiliate_code !== undefined) {
         validated.affiliate_code = data.affiliate_code ? sanitizeString(String(data.affiliate_code), 50) : null;
       }
+
+      if (data.must_change_password !== undefined) {
+        validated.must_change_password = Boolean(data.must_change_password);
+      }
       
       return { data: validated };
     }
@@ -199,7 +375,6 @@ function validateTableData(table: string, data: Record<string, unknown>): { data
     case "leads": {
       const validated: Record<string, unknown> = {};
       
-      // Required fields for insert
       if (data.user_id) {
         if (!isValidUUID(String(data.user_id))) {
           return { error: "Invalid user_id format (must be UUID)" };
