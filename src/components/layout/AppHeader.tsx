@@ -4,7 +4,6 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useTheme } from "@/hooks/useTheme";
 import { Language } from "@/i18n/translations";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,15 +25,6 @@ export const AppHeader = () => {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
-  const getInitials = (name: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const handleLanguageChange = (value: string) => {
     setLanguage(value as Language);
@@ -76,18 +66,12 @@ export const AppHeader = () => {
           </SelectContent>
         </Select>
 
-        {/* User Menu */}
+        {/* User Menu - Only show logout */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-accent transition-colors">
-            <Avatar className="h-8 w-8 border border-border">
-              <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback className="bg-accent text-accent-foreground text-sm">
-                {getInitials(profile?.full_name)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="hidden text-sm font-medium text-foreground sm:block">
-              {profile?.full_name || "User"}
-            </span>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
+              <LogOut className="h-5 w-5" />
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <div className="px-2 py-1.5 text-sm text-muted-foreground">

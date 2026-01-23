@@ -35,6 +35,11 @@ type DashboardTranslations = {
   copyFailed: string;
   copyFailedDescription: string;
   performanceOverview: string;
+  leadsPerformance: string;
+  earningsPerformance: string;
+  activeEntries: string;
+  inactiveExits: string;
+  cumulativeEarnings: string;
   last30Days: string;
   earnings: string;
   leads: string;
@@ -117,11 +122,16 @@ type SettingsTranslations = {
   updateFailedDescription: string;
 };
 
+type CommonTranslations = {
+  affiliatePortal: string;
+};
+
 export type TranslationKeys = {
   loading: string;
   copy: string;
   copied: string;
   signOut: string;
+  common: CommonTranslations;
   auth: AuthTranslations;
   dashboard: DashboardTranslations;
   nav: NavTranslations;
@@ -137,6 +147,10 @@ export const translations = {
     copy: "Copy",
     copied: "Copied",
     signOut: "Sign out",
+    
+    common: {
+      affiliatePortal: "Affiliate Portal",
+    },
     
     // Auth Page
     auth: {
@@ -174,6 +188,11 @@ export const translations = {
       copyFailed: "Failed to copy",
       copyFailedDescription: "Please try copying the link manually.",
       performanceOverview: "Performance Overview",
+      leadsPerformance: "Leads Performance",
+      earningsPerformance: "Earnings Performance",
+      activeEntries: "Active (Entries)",
+      inactiveExits: "Inactive (Exits)",
+      cumulativeEarnings: "Cumulative Earnings",
       last30Days: "Last 30 days",
       earnings: "Earnings",
       leads: "Leads",
@@ -268,6 +287,10 @@ export const translations = {
     copied: "Copiado",
     signOut: "Sair",
 
+    common: {
+      affiliatePortal: "Portal de Afiliados",
+    },
+
     // Auth Page
     auth: {
       welcomeBack: "Bem-vindo de volta",
@@ -304,6 +327,11 @@ export const translations = {
       copyFailed: "Falha ao copiar",
       copyFailedDescription: "Por favor, tente copiar o link manualmente.",
       performanceOverview: "Visão de Performance",
+      leadsPerformance: "Performance de Leads",
+      earningsPerformance: "Performance de Ganhos",
+      activeEntries: "Ativos (Entradas)",
+      inactiveExits: "Inativos (Saídas)",
+      cumulativeEarnings: "Ganhos Acumulados",
       last30Days: "Últimos 30 dias",
       earnings: "Ganhos",
       leads: "Leads",
@@ -398,6 +426,10 @@ export const translations = {
     copied: "Copiado",
     signOut: "Cerrar sesión",
 
+    common: {
+      affiliatePortal: "Portal de Afiliados",
+    },
+
     // Auth Page
     auth: {
       welcomeBack: "Bienvenido de nuevo",
@@ -434,6 +466,11 @@ export const translations = {
       copyFailed: "Error al copiar",
       copyFailedDescription: "Por favor, intenta copiar el enlace manualmente.",
       performanceOverview: "Resumen de Rendimiento",
+      leadsPerformance: "Rendimiento de Leads",
+      earningsPerformance: "Rendimiento de Ganancias",
+      activeEntries: "Activos (Entradas)",
+      inactiveExits: "Inactivos (Salidas)",
+      cumulativeEarnings: "Ganancias Acumuladas",
       last30Days: "Últimos 30 días",
       earnings: "Ganancias",
       leads: "Leads",
