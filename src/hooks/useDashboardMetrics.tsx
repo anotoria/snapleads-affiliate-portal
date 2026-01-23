@@ -5,6 +5,7 @@ import { useAuth } from "./useAuth";
 export interface DashboardMetrics {
   totalEarnings: number;
   activeLeads: number;
+  inactiveLeads: number;
   pendingLeads: number;
   totalLeads: number;
   pendingPayouts: number;
@@ -24,6 +25,7 @@ export const useDashboardMetrics = () => {
         return {
           totalEarnings: 0,
           activeLeads: 0,
+          inactiveLeads: 0,
           pendingLeads: 0,
           totalLeads: 0,
           pendingPayouts: 0,
@@ -61,7 +63,8 @@ export const useDashboardMetrics = () => {
 
       // Calculate metrics
       const totalEarnings = leadsData.reduce((sum, lead) => sum + Number(lead.commission), 0);
-      const activeLeads = leadsData.filter(lead => lead.status === "converted").length;
+      const activeLeads = leadsData.filter(lead => lead.status === "active").length;
+      const inactiveLeads = leadsData.filter(lead => lead.status === "inactive").length;
       const pendingLeads = leadsData.filter(lead => lead.status === "pending").length;
       const totalLeads = leadsData.length;
 
@@ -108,6 +111,7 @@ export const useDashboardMetrics = () => {
       return {
         totalEarnings,
         activeLeads,
+        inactiveLeads,
         pendingLeads,
         totalLeads,
         pendingPayouts,
