@@ -1,84 +1,158 @@
 
-# Plano: Adicionar Nome do Usuário na Tela de Suporte
+# Plano: Atualização Completa do Webhook e Documentação
 
 ## Resumo
-Exibir o nome do usuário que criou o ticket em duas áreas da página de Suporte do afiliado:
-1. **Lista de Meus Tickets** - Nome junto ao título do ticket
-2. **Tela de Conversa** - Nome abaixo da data de criação
+
+O webhook `n8n-webhook` está atualizado e funcional, mas a documentação está significativamente desatualizada. A documentação atual documenta apenas 4 tabelas e 4 actions, enquanto o webhook suporta 11 tabelas, 11 actions, e funcionalidades avançadas de segurança.
+
+## Análise de Discrepâncias
+
+### Tabelas não documentadas:
+| Tabela | Status |
+|--------|--------|
+| user_roles | Falta na documentação |
+| tiers | Falta na documentação |
+| pricing_tiers | Falta na documentação |
+| commission_history | Falta na documentação |
+| documents | Falta na documentação |
+| support_tickets | Falta na documentação |
+| support_messages | Falta na documentação |
+
+### Actions não documentadas:
+| Action | Descrição |
+|--------|-----------|
+| delete | Excluir registros (documents, support_tickets, support_messages, user_roles) |
+| calculate_tier | Calcular e atualizar nível do afiliado |
+| calculate_commission | Registrar comissão mensal |
+| deactivate_user | Desativar usuário |
+| activate_user | Ativar usuário |
+| reset_password | Redefinir senha |
+| get_admin_summary | Obter resumo administrativo |
+
+### Campos adicionais de usuário não documentados:
+- `company_name` - Nome da empresa
+- `cnpj` - CNPJ (14 dígitos)
+- `phone` - Telefone (10-15 dígitos)
+- `tier_level` - Nível do afiliado
+- `role` - Papel do usuário (admin, super_admin, user)
+
+### Funcionalidades de segurança não documentadas:
+- Verificação de assinatura HMAC (headers opcionais)
+- Audit logging para operações sensíveis
+- Validação de CNPJ e telefone
+- Sanitização de HTML/XSS
+
+---
 
 ## Alterações Necessárias
 
-### Arquivo: `src/pages/Support.tsx`
+### 1. Atualização da Documentação (`docs/WEBHOOK_DOCUMENTATION.md`)
 
-#### 1. Na Lista de Tickets (Meus Tickets)
-Adicionar o nome do usuário (obtido via `useAuth().profile.full_name`) abaixo do título do ticket ou junto com a data.
+A documentação será completamente reescrita para incluir:
 
-**Layout Atual:**
-```
-Meu cliente ainda nao ativou e ...    [Aberto]
-26/01/2026 17:55
-```
+1. **Visão Geral Atualizada** - Refletir todas as 11 tabelas suportadas
+2. **Autenticação Avançada** - Incluir HMAC signature verification opcional
+3. **Payload Base Atualizado** - Incluir todas as actions disponíveis
+4. **Novas Seções de Tabelas**:
+   - Tiers (Níveis de Parceria)
+   - Pricing Tiers (Faixas de Preço)
+   - Commission History (Histórico de Comissões)
+   - Documents (Documentos)
+   - Support Tickets (Tickets de Suporte)
+   - Support Messages (Mensagens de Suporte)
+   - User Roles (Papéis de Usuário)
 
-**Layout Proposto:**
-```
-Meu cliente ainda nao ativou e ...    [Aberto]
-Rodrigo Mendes • 26/01/2026 17:55
-```
+5. **Seção de Actions Especiais**:
+   - calculate_tier
+   - calculate_commission
+   - deactivate_user / activate_user
+   - reset_password
+   - get_admin_summary
 
-#### 2. Na Tela de Conversa (Detalhes do Ticket)
-Adicionar o nome do usuário na descrição abaixo da data de criação.
+6. **Campos de Usuário Expandidos**:
+   - company_name, cnpj, phone, tier_level, role
 
-**Layout Atual:**
-```
-Meu cliente ainda nao ativou e ja pagou
-Criado em 26/01/2026 às 17:55
-```
+7. **Filtros Adicionais**:
+   - is_active, tier_level, category, priority, ticket_id, reference_month
 
-**Layout Proposto:**
-```
-Meu cliente ainda nao ativou e ja pagou
-Criado em 26/01/2026 às 17:55
-por Rodrigo Mendes
-```
+8. **Exemplos Completos** para cada nova funcionalidade
 
 ---
 
 ## Detalhes Técnicos
 
-### Implementação
-
-1. O componente já utiliza `useAuth()` para o usuário logado, mas não está extraindo o `profile`
-2. Adicionar extração do profile: `const { profile } = useAuth();`
-3. Usar `profile?.full_name` para exibir o nome do usuário
-
-### Modificações no Código
-
-**Linha ~22** - Adicionar extração do profile:
-```typescript
-const { profile } = useAuth();
-```
-
-**Linha ~242-245** - Atualizar a lista de tickets para incluir o nome:
-```typescript
-<div className="min-w-0">
-  <h4 className="font-medium truncate">{ticket.subject}</h4>
-  <p className="text-xs text-muted-foreground mt-1">
-    {profile?.full_name && <span>{profile.full_name} • </span>}
-    {format(new Date(ticket.created_at), "dd/MM/yyyy HH:mm")}
-  </p>
-</div>
-```
-
-**Linha ~273-275** - Atualizar o CardDescription para incluir o nome:
-```typescript
-<CardDescription>
-  Criado em {format(new Date(selectedTicket.created_at), "dd/MM/yyyy 'às' HH:mm")}
-  {profile?.full_name && <span className="block">por {profile.full_name}</span>}
-</CardDescription>
-```
-
 ### Arquivo Modificado
-- `src/pages/Support.tsx`
+- `docs/WEBHOOK_DOCUMENTATION.md`
 
-## Observação
-Como os afiliados só visualizam seus próprios tickets nesta tela, o nome do usuário será sempre o mesmo (do usuário logado). Para uma experiência mais rica onde cada ticket pudesse ter um criador diferente (cenário futuro), seria necessário modificar o hook `useSupportTickets` para fazer join com a tabela `profiles`.
+### Estrutura da Nova Documentação
+
+```text
+# SnapLeads Portal - Webhook n8n Documentation v2.0
+
+## Visão Geral (atualizado)
+## Autenticação
+  - Header básico (x-webhook-secret)
+  - HMAC Signature (opcional)
+## URL Base
+## Estrutura da Requisição
+## Tabelas Suportadas (11 tabelas)
+  1. Users
+  2. Profiles
+  3. Leads
+  4. Payouts
+  5. Tiers (NOVO)
+  6. Pricing Tiers (NOVO)
+  7. Commission History (NOVO)
+  8. Documents (NOVO)
+  9. Support Tickets (NOVO)
+  10. Support Messages (NOVO)
+  11. User Roles (NOVO)
+## Actions Especiais (7 actions)
+  - calculate_tier (NOVO)
+  - calculate_commission (NOVO)
+  - deactivate_user (NOVO)
+  - activate_user (NOVO)
+  - reset_password (NOVO)
+  - get_admin_summary (NOVO)
+  - delete (NOVO)
+## Filtros Disponíveis (expandido)
+## Validações de Dados
+  - CNPJ (NOVO)
+  - Phone (NOVO)
+  - URL (NOVO)
+## Códigos de Resposta
+## Respostas de Erro
+## Exemplos Completos (expandido)
+## Segurança Avançada (NOVO)
+  - HMAC Verification
+  - Audit Logging
+## Notas Importantes
+## Changelog
+```
+
+### Conteúdo Principal a Adicionar
+
+**Seção: Tiers (Níveis de Parceria)**
+- GET com filtro is_active
+- INSERT/UPDATE/UPSERT com campos: name, display_name, min_revenue, max_revenue, commission_percentage, bonus_amount, color, icon, sort_order, client_count
+
+**Seção: Actions Especiais**
+- calculate_tier: Atualiza tier baseado em receita
+- calculate_commission: Registra comissão mensal
+- deactivate_user/activate_user: Gerencia status do usuário
+- reset_password: Redefine senha
+- get_admin_summary: KPIs do sistema
+
+**Seção: HMAC Signature (Segurança Avançada)**
+- Headers opcionais: x-webhook-signature, x-webhook-timestamp
+- Secret: N8N_WEBHOOK_HMAC_SECRET
+- Janela de tempo: 5 minutos
+
+---
+
+## Impacto
+
+- **Não há mudanças no código do webhook** - O código está completo e funcional
+- **Apenas atualização da documentação** - Para refletir o estado atual
+- **Melhor integração com n8n** - Documentação completa facilita automações
+
