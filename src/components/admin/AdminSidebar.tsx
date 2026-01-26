@@ -5,7 +5,8 @@ import {
   DollarSign, 
   HelpCircle, 
   Shield, 
-  ArrowLeft 
+  ArrowLeft,
+  Wallet
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -42,8 +43,9 @@ export const AdminSidebar = () => {
     { title: t.nav.adminSupport, url: "/admin/support", icon: HelpCircle },
   ];
 
-  // Only super admins can manage other admins
+  // Only super admins can manage other admins and see SA commissions
   if (isSuperAdmin) {
+    navItems.push({ title: t.nav.adminSACommissions, url: "/admin/sa-commissions", icon: Wallet });
     navItems.push({ title: t.nav.adminAdmins, url: "/admin/admins", icon: Shield });
   }
 
