@@ -448,6 +448,7 @@ export type Database = {
       tiers: {
         Row: {
           bonus_amount: number
+          client_count: number
           color: string
           commission_percentage: number
           created_at: string
@@ -463,6 +464,7 @@ export type Database = {
         }
         Insert: {
           bonus_amount?: number
+          client_count?: number
           color: string
           commission_percentage: number
           created_at?: string
@@ -478,6 +480,7 @@ export type Database = {
         }
         Update: {
           bonus_amount?: number
+          client_count?: number
           color?: string
           commission_percentage?: number
           created_at?: string

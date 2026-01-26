@@ -35,13 +35,16 @@ const AdminTiers = () => {
     name: "",
     display_name: "",
     min_revenue: 0,
-    max_revenue: null,
+    client_count: 0,
     commission_percentage: 0,
     bonus_amount: 0,
     color: "#6B7280",
     sort_order: 0,
     is_active: true,
   });
+
+  // Calcula o faturamento máximo automaticamente (qtde clientes * R$2.500)
+  const calculatedMaxRevenue = formData.client_count > 0 ? formData.client_count * 2500 : null;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -56,7 +59,7 @@ const AdminTiers = () => {
       name: "",
       display_name: "",
       min_revenue: 0,
-      max_revenue: null,
+      client_count: 0,
       commission_percentage: 0,
       bonus_amount: 0,
       color: "#6B7280",
@@ -72,7 +75,7 @@ const AdminTiers = () => {
       name: tier.name,
       display_name: tier.display_name,
       min_revenue: Number(tier.min_revenue),
-      max_revenue: tier.max_revenue ? Number(tier.max_revenue) : null,
+      client_count: (tier as any).client_count ?? 0,
       commission_percentage: Number(tier.commission_percentage),
       bonus_amount: Number(tier.bonus_amount),
       color: tier.color,
@@ -246,19 +249,26 @@ const AdminTiers = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{t.admin.maxRevenue}</Label>
+                  <Label>Qtde de Clientes (Leads)</Label>
                   <Input
                     type="number"
-                    value={formData.max_revenue || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        max_revenue: e.target.value ? Number(e.target.value) : null,
-                      })
-                    }
-                    placeholder="∞"
+                    value={formData.client_count}
+                    onChange={(e) => setFormData({ ...formData, client_count: Number(e.target.value) })}
+                    min={0}
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t.admin.maxRevenue} (calculado automaticamente)</Label>
+                <Input
+                  type="text"
+                  value={calculatedMaxRevenue ? formatCurrency(calculatedMaxRevenue) : "∞"}
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+                <p className="text-xs text-muted-foreground">
+                  = Qtde de Clientes × R$ 2.500
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
