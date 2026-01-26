@@ -3,6 +3,7 @@ import { MessageSquare, Plus, HelpCircle, Send, Clock, CheckCircle, AlertCircle 
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSupportTickets, useSupportMessages, useCreateTicket, useAddMessage, SupportTicket } from "@/hooks/useSupportTickets";
+import { useAuth } from "@/hooks/useAuth";
 import { PageTransition } from "@/components/animations/PageTransition";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { format } from "date-fns";
 
 const Support = () => {
   const { t } = useLanguage();
+  const { profile } = useAuth();
   const { data: tickets, isLoading } = useSupportTickets();
   const createTicket = useCreateTicket();
   const addMessage = useAddMessage();
@@ -238,9 +240,10 @@ const Support = () => {
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
+                          <div className="min-w-0">
                               <h4 className="font-medium truncate">{ticket.subject}</h4>
                               <p className="text-xs text-muted-foreground mt-1">
+                                {profile?.full_name && <span>{profile.full_name} • </span>}
                                 {format(new Date(ticket.created_at), "dd/MM/yyyy HH:mm")}
                               </p>
                             </div>
@@ -272,6 +275,7 @@ const Support = () => {
                             <CardTitle>{selectedTicket.subject}</CardTitle>
                             <CardDescription>
                               Criado em {format(new Date(selectedTicket.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                              {profile?.full_name && <span className="block">por {profile.full_name}</span>}
                             </CardDescription>
                           </div>
                           <div className="flex gap-2">
