@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, Lock, User, ArrowRight, ShieldAlert } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, ShieldAlert, Building, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Logo } from "@/components/Logo";
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type LoginFormData = {
   email: string;
@@ -22,8 +23,11 @@ type LoginFormData = {
 type SignUpFormData = {
   fullName: string;
   email: string;
+  companyName: string;
+  phone: string;
   password: string;
   confirmPassword: string;
+  agreeNotifications: boolean;
 };
 
 type ResetFormData = {
@@ -64,8 +68,14 @@ const Auth = () => {
   const signUpSchema = z.object({
     fullName: z.string().min(2, t.auth.fullName),
     email: z.string().email(t.auth.email),
+    companyName: z.string().min(2, "Company name is required"),
+    phone: z.string()
+      .min(10, "Phone must have at least 10 digits")
+      .max(15, "Phone must have at most 15 digits")
+      .regex(/^[0-9]+$/, "Phone must contain only numbers"),
     password: z.string().min(6, t.auth.password),
     confirmPassword: z.string(),
+    agreeNotifications: z.boolean().refine(val => val === true, "You must agree to receive notifications"),
   }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
@@ -90,7 +100,7 @@ const Auth = () => {
 
   const signUpForm = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { fullName: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { fullName: "", email: "", companyName: "", phone: "", password: "", confirmPassword: "", agreeNotifications: false },
   });
 
   const resetForm = useForm<ResetFormData>({
@@ -126,7 +136,7 @@ const Auth = () => {
 
   const handleSignUp = async (data: SignUpFormData) => {
     setIsLoading(true);
-    const { error } = await signUp(data.email, data.password, data.fullName);
+    const { error } = await signUp(data.email, data.password, data.fullName, data.companyName, data.phone);
     setIsLoading(false);
 
     if (error) {
@@ -353,6 +363,40 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="companyName" className="text-foreground">Company Name</Label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="companyName"
+                    type="text"
+                    placeholder="Your Company"
+                    className="pl-10"
+                    {...signUpForm.register("companyName")}
+                  />
+                </div>
+                {signUpForm.formState.errors.companyName && (
+                  <p className="text-sm text-destructive">{signUpForm.formState.errors.companyName.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-foreground">Phone Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="text"
+                    placeholder="11999998888"
+                    className="pl-10"
+                    {...signUpForm.register("phone")}
+                  />
+                </div>
+                {signUpForm.formState.errors.phone && (
+                  <p className="text-sm text-destructive">{signUpForm.formState.errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="signupPassword" className="text-foreground">{t.auth.password}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -370,7 +414,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-foreground">{t.auth.password}</Label>
+                <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -385,6 +429,32 @@ const Auth = () => {
                   <p className="text-sm text-destructive">{signUpForm.formState.errors.confirmPassword.message}</p>
                 )}
               </div>
+
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="agreeNotifications"
+                  checked={signUpForm.watch("agreeNotifications")}
+                  onCheckedChange={(checked) => signUpForm.setValue("agreeNotifications", checked === true)}
+                />
+                <label
+                  htmlFor="agreeNotifications"
+                  className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+                >
+                  I agree to receive email and phone notifications (like when I earn a commission) and other important notifications regarding the affiliate program.
+                </label>
+              </div>
+              {signUpForm.formState.errors.agreeNotifications && (
+                <p className="text-sm text-destructive">{signUpForm.formState.errors.agreeNotifications.message}</p>
+              )}
+
+              <a
+                href="https://snapleads.com.br/joinaffiliate"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-center text-sm text-primary hover:underline"
+              >
+                Ver portal de Afiliados
+              </a>
 
               <GradientButton type="submit" isLoading={isLoading}>
                 {t.auth.signUp}
