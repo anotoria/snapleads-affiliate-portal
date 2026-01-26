@@ -373,7 +373,7 @@ export const translations = {
     signOut: "Sign out",
     
     common: {
-      affiliatePortal: "Affiliate Portal",
+      affiliatePortal: "Affiliate Program",
       adminMode: "Admin Mode",
       affiliateMode: "Affiliate Mode",
       save: "Save",
@@ -394,8 +394,8 @@ export const translations = {
     auth: {
       welcomeBack: "Welcome back",
       signInToContinue: "Sign in to continue to your affiliate dashboard",
-      createAccount: "Create your account",
-      startEarning: "Start earning with SnapLeads today",
+      createAccount: "Become our partner",
+      startEarning: "Start earning with SnapLeads today. Sign up today and receive up to 40% recurring commissions while your clients' accounts are active.",
       email: "Email",
       password: "Password",
       fullName: "Full Name",
@@ -723,7 +723,7 @@ export const translations = {
     signOut: "Sair",
 
     common: {
-      affiliatePortal: "Portal de Afiliados",
+      affiliatePortal: "Programa de Afiliados",
       adminMode: "Modo Admin",
       affiliateMode: "Modo Afiliado",
       save: "Salvar",
@@ -744,8 +744,8 @@ export const translations = {
     auth: {
       welcomeBack: "Bem-vindo de volta",
       signInToContinue: "Entre para acessar seu painel de afiliado",
-      createAccount: "Crie sua conta",
-      startEarning: "Comece a ganhar com SnapLeads hoje",
+      createAccount: "Se torne nosso parceiro",
+      startEarning: "Comece a ganhar com SnapLeads hoje. Cadastre-se hoje e receba até 40% de comissões recorrentes enquanto as contas de seus clientes estiverem ativas.",
       email: "Email",
       password: "Senha",
       fullName: "Nome Completo",
@@ -1073,7 +1073,7 @@ export const translations = {
     signOut: "Cerrar sesión",
 
     common: {
-      affiliatePortal: "Portal de Afiliados",
+      affiliatePortal: "Programa de Afiliados",
       adminMode: "Modo Admin",
       affiliateMode: "Modo Afiliado",
       save: "Guardar",
@@ -1094,8 +1094,8 @@ export const translations = {
     auth: {
       welcomeBack: "Bienvenido de nuevo",
       signInToContinue: "Inicia sesión para continuar a tu panel de afiliado",
-      createAccount: "Crea tu cuenta",
-      startEarning: "Comienza a ganar con SnapLeads hoy",
+      createAccount: "Conviértete en nuestro socio",
+      startEarning: "Comienza a ganar con SnapLeads hoy. Regístrate hoy y recibe hasta 40% de comisiones recurrentes mientras las cuentas de tus clientes estén activas.",
       email: "Correo electrónico",
       password: "Contraseña",
       fullName: "Nombre Completo",
