@@ -10,7 +10,7 @@ export interface TierFormData {
   name: string;
   display_name: string;
   min_revenue: number;
-  max_revenue: number | null;
+  client_count: number;
   commission_percentage: number;
   bonus_amount: number;
   color: string;
