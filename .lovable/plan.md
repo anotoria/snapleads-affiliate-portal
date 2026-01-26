@@ -1,98 +1,130 @@
 
-# Plano: Corrigir Progresso de Nível com Contagem de Leads e Faturamento
+# Plano: Atualizar Simulador de Comissões com Cálculo Baseado em Leads
 
-## Problema Identificado
-O card de Progresso de Nível está mostrando R$ 0,00 mesmo o afiliado tendo 6 leads ativos. Isso ocorre porque:
+## Resumo
+Modificar o Simulador de Comissões para calcular automaticamente o faturamento baseado na quantidade de leads, usando o valor base por lead (R$ 2.500) e os níveis de parceria cadastrados na tabela de tiers.
 
-1. O cálculo atual usa `monthlyRevenue` dos leads, que depende do campo `monthly_value` de cada lead
-2. Os níveis (tiers) agora são baseados em `client_count` (quantidade de clientes)
-3. A estrutura atual dos tiers:
-   - **Silver**: 0-5 clientes (R$ 0 - R$ 12.500)
-   - **Gold**: 5-20 clientes (R$ 12.500,01 - R$ 50.000)
-   - **Platinum**: 20-30 clientes (R$ 50.000,01 - R$ 75.000)
-   - **Diamond**: 30-40 clientes (R$ 75.000,01 - R$ 100.000)
+## Alterações no Formulário
 
-## Solução Proposta
-Atualizar o sistema de progresso para calcular baseado na **quantidade de leads ativos** e exibir ambas as métricas (quantidade e valor).
+### Campos do Simulador
+1. **Qtde de Leads** - Campo editável onde o usuário informa a quantidade de leads
+2. **Faturamento Mensal (R$)** - Campo somente leitura, calculado automaticamente (Qtde Leads × R$ 2.500)
 
-### Alterações Necessárias
+### Resultados Exibidos
+- Faturamento Total (Leads × Valor Base)
+- Faixa/Nível do Afiliado (Silver, Gold, Platinum, Diamond)
+- Comissão que o afiliado ganharia (Faturamento × % da faixa)
+- Bônus do nível (se aplicável)
+- Total (Comissão + Bônus)
 
-#### 1. Atualizar Hook `useTiers.tsx`
-Modificar `useUserTierProgress` para:
-- Receber a quantidade de leads ativos como parâmetro principal
-- Usar `client_count` dos tiers para determinar nível atual e próximo
-- Calcular o progresso baseado na quantidade de leads
-- Retornar informações sobre faturamento calculado (leads * R$ 2.500)
-
-#### 2. Atualizar `TierProgressCard.tsx`
-Redesenhar o card para mostrar:
-- Barra de progresso única baseada na quantidade de leads
-- **Linha 1**: Quantidade atual de leads vs quantidade necessária para próximo nível
-- **Linha 2**: Faturamento atual calculado (leads * R$ 2.500) vs faturamento do próximo nível
-- Manter mensagem de bônus e comissão
-
-### Layout Visual Proposto
+## Layout Visual Proposto
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  📈 Progresso de Nível                                  │
-├─────────────────────────────────────────────────────────┤
-│  Silver                                           Gold  │
-│  ████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  [30%] │
-│                                                         │
-│  👥 6 de 20 leads ativos          Faltam 14 leads       │
-│  💰 R$ 15.000,00 de R$ 50.000,00  Falta R$ 35.000,00    │
-│                                                         │
-│  💡 Ao atingir Gold, você receberá um bônus...          │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  🧮 Simulador de Comissões                                      │
+│  Simule seus ganhos baseado na quantidade de leads              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Qtde de Leads:          [    25    ]                           │
+│                                                                 │
+│  Faturamento Mensal:     R$ 62.500,00   (bloqueado)             │
+│  (calculado: 25 × R$ 2.500)                                     │
+│                                                                 │
+│  [ Calcular Comissão ]                                          │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│  📊 RESULTADO                                                   │
+│                                                                 │
+│  Faixa de Parceria:      Platinum (30% comissão)                │
+│                                                                 │
+│  💰 Faturamento Total:   R$ 62.500,00                           │
+│  📈 Comissão Estimada:   R$ 18.750,00                           │
+│  🎁 Bônus do Nível:      R$ 0,00                                │
+│  ─────────────────────────────────────────────────────────────  │
+│  ✅ TOTAL:               R$ 18.750,00                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+## Lógica de Cálculo
+
+1. **Faturamento = Qtde Leads × R$ 2.500** (valor base por lead)
+2. **Determinar Faixa**: Baseado no `client_count` de cada tier
+   - Silver: até 5 leads (20%)
+   - Gold: 5-20 leads (25%)
+   - Platinum: 20-30 leads (30%)
+   - Diamond: 30-40+ leads (40%)
+3. **Comissão = Faturamento × (% da Faixa / 100)**
+4. **Total = Comissão + Bônus do Nível**
 
 ---
 
 ## Detalhes Técnicos
 
-### Modificações em `src/hooks/useTiers.tsx`
+### Arquivo: `src/pages/Commissions.tsx`
 
+**Mudanças:**
+1. Substituir estado `simulatorRevenue` por `simulatorLeads`
+2. Adicionar cálculo automático de faturamento usando `BASE_VALUE_PER_LEAD = 2500`
+3. Determinar faixa baseada em `client_count` dos tiers (usando `sort_order`)
+4. Atualizar campos do formulário:
+   - Input editável para quantidade de leads
+   - Input bloqueado (disabled) para faturamento calculado
+5. Expandir resultado para mostrar faturamento total e faixa detalhada
+
+**Novo Estado:**
 ```typescript
-// Nova assinatura do hook
-export const useUserTierProgress = (activeLeadsCount: number) => {
-  const { data: tiers, isLoading } = useTiers();
+const [simulatorLeads, setSimulatorLeads] = useState("");
+const [simulatorResult, setSimulatorResult] = useState<{
+  tier: string;
+  tierColor: string;
+  commissionRate: number;
+  revenue: number;
+  commission: number;
+  bonus: number;
+  total: number;
+} | null>(null);
+```
 
-  // Encontrar tier atual baseado em client_count
-  const currentTier = tiers.find(
-    (tier) =>
-      activeLeadsCount >= getMinClientCount(tier) &&
-      (tier.client_count === null || activeLeadsCount < tier.client_count)
-  );
+**Nova Lógica de Cálculo:**
+```typescript
+const BASE_VALUE_PER_LEAD = 2500;
 
-  // Calcular progresso para próximo nível
-  const progress = (activeLeadsCount - minClients) / (nextTier.client_count - minClients) * 100;
+const handleCalculate = () => {
+  const leadsCount = parseInt(simulatorLeads) || 0;
+  if (!tiers || leadsCount <= 0) return;
 
-  // Calcular faturamento (leads * 2500)
-  const currentRevenue = activeLeadsCount * 2500;
-  const nextTierRevenue = nextTier?.min_revenue || 0;
+  const revenue = leadsCount * BASE_VALUE_PER_LEAD;
 
-  return { 
-    currentTier, 
-    nextTier, 
-    progress, 
-    activeLeadsCount,
-    leadsToNextTier,
-    currentRevenue,
-    revenueToNextTier,
-    isLoading 
-  };
+  // Encontrar tier baseado em client_count (ordenado por sort_order)
+  let selectedTier = tiers[0];
+  for (let i = 0; i < tiers.length; i++) {
+    const prevCount = i > 0 ? tiers[i - 1].client_count : 0;
+    const currCount = tiers[i].client_count;
+    if (leadsCount >= prevCount && leadsCount < currCount) {
+      selectedTier = tiers[i];
+      break;
+    }
+    if (leadsCount >= currCount) {
+      selectedTier = tiers[i];
+    }
+  }
+
+  const commission = revenue * (selectedTier.commission_percentage / 100);
+  setSimulatorResult({
+    tier: selectedTier.display_name,
+    tierColor: selectedTier.color,
+    commissionRate: selectedTier.commission_percentage,
+    revenue,
+    commission,
+    bonus: selectedTier.bonus_amount,
+    total: commission + selectedTier.bonus_amount,
+  });
 };
 ```
 
-### Modificações em `src/components/dashboard/TierProgressCard.tsx`
+### Arquivos Modificados
+- `src/pages/Commissions.tsx` - Atualizar o tab do Simulador
 
-1. Usar `metrics?.activeLeads` em vez de `monthlyRevenue`
-2. Exibir duas linhas de informação:
-   - Contagem de leads (atual / necessário para próximo nível)
-   - Faturamento calculado (atual / necessário para próximo nível)
-3. Usar ícones distintos para leads (👥) e faturamento (💰)
-
-### Modificações em `src/components/sidebar/PartnerStatusWidget.tsx`
-
-Atualizar para usar a mesma lógica baseada em quantidade de leads ativos.
+### Constantes Utilizadas
+- `BASE_VALUE_PER_LEAD = 2500` - Já definida em `useTiers.tsx`, será replicada no componente
