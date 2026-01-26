@@ -84,34 +84,32 @@ export const useUserTierProgress = (activeLeadsCount: number) => {
       leadsToNextTier: 0,
       currentRevenue: 0,
       revenueToNextTier: 0,
+      nextTierLeads: 0,
+      nextTierRevenue: 0,
       isLoading: true 
     };
   }
 
-  // Get min client count for a tier (previous tier's client_count or 0)
-  const getMinClientCount = (tierIndex: number): number => {
-    if (tierIndex <= 0) return 0;
-    return tiers[tierIndex - 1].client_count || 0;
-  };
-
-  // Find current tier based on client_count
+  // Tiers are already sorted by sort_order from the query
+  // Find current tier based on client_count thresholds
   let currentTierIndex = 0;
+  
   for (let i = 0; i < tiers.length; i++) {
-    const minClients = getMinClientCount(i);
-    const maxClients = tiers[i].client_count;
+    const tier = tiers[i];
+    const prevTierClientCount = i > 0 ? tiers[i - 1].client_count : 0;
+    const currentTierClientCount = tier.client_count;
     
-    if (activeLeadsCount >= minClients && (maxClients === null || activeLeadsCount < maxClients)) {
+    // User is in this tier if their leads are >= previous tier's client_count and < current tier's client_count
+    if (activeLeadsCount >= prevTierClientCount && activeLeadsCount < currentTierClientCount) {
       currentTierIndex = i;
       break;
     }
-    // If leads exceed current tier, move to next
-    if (maxClients !== null && activeLeadsCount >= maxClients) {
-      currentTierIndex = i + 1;
+    
+    // If user exceeds this tier, continue to next
+    if (activeLeadsCount >= currentTierClientCount) {
+      currentTierIndex = i;
     }
   }
-
-  // Clamp to valid tier range
-  currentTierIndex = Math.min(currentTierIndex, tiers.length - 1);
   
   const currentTier = tiers[currentTierIndex];
   const nextTier = currentTierIndex < tiers.length - 1 ? tiers[currentTierIndex + 1] : null;
@@ -119,20 +117,24 @@ export const useUserTierProgress = (activeLeadsCount: number) => {
   // Calculate progress to next tier based on client count
   let progress = 100;
   let leadsToNextTier = 0;
+  let nextTierLeads = 0;
+  
+  // Get the minimum leads for current tier (previous tier's client_count or 0)
+  const minLeadsForCurrentTier = currentTierIndex > 0 ? tiers[currentTierIndex - 1].client_count : 0;
+  const maxLeadsForCurrentTier = currentTier.client_count;
   
   if (nextTier) {
-    const minClients = getMinClientCount(currentTierIndex);
-    const maxClients = currentTier.client_count || nextTier.client_count || 0;
-    const tierRange = maxClients - minClients;
-    const userProgress = activeLeadsCount - minClients;
+    nextTierLeads = currentTier.client_count; // Target is current tier's max (which is next tier's min)
+    const tierRange = maxLeadsForCurrentTier - minLeadsForCurrentTier;
+    const userProgress = activeLeadsCount - minLeadsForCurrentTier;
     progress = tierRange > 0 ? Math.min(100, Math.max(0, (userProgress / tierRange) * 100)) : 0;
-    leadsToNextTier = Math.max(0, maxClients - activeLeadsCount);
+    leadsToNextTier = Math.max(0, maxLeadsForCurrentTier - activeLeadsCount);
   }
 
   // Calculate revenue based on leads
   const currentRevenue = activeLeadsCount * BASE_VALUE_PER_LEAD;
-  const nextTierRevenue = nextTier ? nextTier.min_revenue : 0;
-  const revenueToNextTier = Math.max(0, nextTierRevenue - currentRevenue);
+  const nextTierRevenue = nextTier ? nextTier.min_revenue : currentTier.max_revenue || 0;
+  const revenueToNextTier = Math.max(0, Number(nextTierRevenue) - currentRevenue);
 
   return { 
     currentTier, 
@@ -142,6 +144,8 @@ export const useUserTierProgress = (activeLeadsCount: number) => {
     leadsToNextTier,
     currentRevenue,
     revenueToNextTier,
+    nextTierLeads,
+    nextTierRevenue: Number(nextTierRevenue),
     isLoading: false 
   };
 };
