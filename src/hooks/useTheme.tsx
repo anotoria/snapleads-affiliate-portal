@@ -14,8 +14,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("snapleads-theme") as Theme;
-      if (stored) return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      // If user has a saved preference, use it; otherwise default to light theme
+      if (stored === "light" || stored === "dark") return stored;
+      // Default to light theme for first-time users (not system preference)
+      return "light";
     }
     return "light";
   });
