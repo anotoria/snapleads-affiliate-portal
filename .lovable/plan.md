@@ -1,130 +1,84 @@
 
-# Plano: Atualizar Simulador de Comissões com Cálculo Baseado em Leads
+# Plano: Adicionar Nome do Usuário na Tela de Suporte
 
 ## Resumo
-Modificar o Simulador de Comissões para calcular automaticamente o faturamento baseado na quantidade de leads, usando o valor base por lead (R$ 2.500) e os níveis de parceria cadastrados na tabela de tiers.
+Exibir o nome do usuário que criou o ticket em duas áreas da página de Suporte do afiliado:
+1. **Lista de Meus Tickets** - Nome junto ao título do ticket
+2. **Tela de Conversa** - Nome abaixo da data de criação
 
-## Alterações no Formulário
+## Alterações Necessárias
 
-### Campos do Simulador
-1. **Qtde de Leads** - Campo editável onde o usuário informa a quantidade de leads
-2. **Faturamento Mensal (R$)** - Campo somente leitura, calculado automaticamente (Qtde Leads × R$ 2.500)
+### Arquivo: `src/pages/Support.tsx`
 
-### Resultados Exibidos
-- Faturamento Total (Leads × Valor Base)
-- Faixa/Nível do Afiliado (Silver, Gold, Platinum, Diamond)
-- Comissão que o afiliado ganharia (Faturamento × % da faixa)
-- Bônus do nível (se aplicável)
-- Total (Comissão + Bônus)
+#### 1. Na Lista de Tickets (Meus Tickets)
+Adicionar o nome do usuário (obtido via `useAuth().profile.full_name`) abaixo do título do ticket ou junto com a data.
 
-## Layout Visual Proposto
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  🧮 Simulador de Comissões                                      │
-│  Simule seus ganhos baseado na quantidade de leads              │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Qtde de Leads:          [    25    ]                           │
-│                                                                 │
-│  Faturamento Mensal:     R$ 62.500,00   (bloqueado)             │
-│  (calculado: 25 × R$ 2.500)                                     │
-│                                                                 │
-│  [ Calcular Comissão ]                                          │
-│                                                                 │
-├─────────────────────────────────────────────────────────────────┤
-│  📊 RESULTADO                                                   │
-│                                                                 │
-│  Faixa de Parceria:      Platinum (30% comissão)                │
-│                                                                 │
-│  💰 Faturamento Total:   R$ 62.500,00                           │
-│  📈 Comissão Estimada:   R$ 18.750,00                           │
-│  🎁 Bônus do Nível:      R$ 0,00                                │
-│  ─────────────────────────────────────────────────────────────  │
-│  ✅ TOTAL:               R$ 18.750,00                           │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+**Layout Atual:**
+```
+Meu cliente ainda nao ativou e ...    [Aberto]
+26/01/2026 17:55
 ```
 
-## Lógica de Cálculo
+**Layout Proposto:**
+```
+Meu cliente ainda nao ativou e ...    [Aberto]
+Rodrigo Mendes • 26/01/2026 17:55
+```
 
-1. **Faturamento = Qtde Leads × R$ 2.500** (valor base por lead)
-2. **Determinar Faixa**: Baseado no `client_count` de cada tier
-   - Silver: até 5 leads (20%)
-   - Gold: 5-20 leads (25%)
-   - Platinum: 20-30 leads (30%)
-   - Diamond: 30-40+ leads (40%)
-3. **Comissão = Faturamento × (% da Faixa / 100)**
-4. **Total = Comissão + Bônus do Nível**
+#### 2. Na Tela de Conversa (Detalhes do Ticket)
+Adicionar o nome do usuário na descrição abaixo da data de criação.
+
+**Layout Atual:**
+```
+Meu cliente ainda nao ativou e ja pagou
+Criado em 26/01/2026 às 17:55
+```
+
+**Layout Proposto:**
+```
+Meu cliente ainda nao ativou e ja pagou
+Criado em 26/01/2026 às 17:55
+por Rodrigo Mendes
+```
 
 ---
 
 ## Detalhes Técnicos
 
-### Arquivo: `src/pages/Commissions.tsx`
+### Implementação
 
-**Mudanças:**
-1. Substituir estado `simulatorRevenue` por `simulatorLeads`
-2. Adicionar cálculo automático de faturamento usando `BASE_VALUE_PER_LEAD = 2500`
-3. Determinar faixa baseada em `client_count` dos tiers (usando `sort_order`)
-4. Atualizar campos do formulário:
-   - Input editável para quantidade de leads
-   - Input bloqueado (disabled) para faturamento calculado
-5. Expandir resultado para mostrar faturamento total e faixa detalhada
+1. O componente já utiliza `useAuth()` para o usuário logado, mas não está extraindo o `profile`
+2. Adicionar extração do profile: `const { profile } = useAuth();`
+3. Usar `profile?.full_name` para exibir o nome do usuário
 
-**Novo Estado:**
+### Modificações no Código
+
+**Linha ~22** - Adicionar extração do profile:
 ```typescript
-const [simulatorLeads, setSimulatorLeads] = useState("");
-const [simulatorResult, setSimulatorResult] = useState<{
-  tier: string;
-  tierColor: string;
-  commissionRate: number;
-  revenue: number;
-  commission: number;
-  bonus: number;
-  total: number;
-} | null>(null);
+const { profile } = useAuth();
 ```
 
-**Nova Lógica de Cálculo:**
+**Linha ~242-245** - Atualizar a lista de tickets para incluir o nome:
 ```typescript
-const BASE_VALUE_PER_LEAD = 2500;
-
-const handleCalculate = () => {
-  const leadsCount = parseInt(simulatorLeads) || 0;
-  if (!tiers || leadsCount <= 0) return;
-
-  const revenue = leadsCount * BASE_VALUE_PER_LEAD;
-
-  // Encontrar tier baseado em client_count (ordenado por sort_order)
-  let selectedTier = tiers[0];
-  for (let i = 0; i < tiers.length; i++) {
-    const prevCount = i > 0 ? tiers[i - 1].client_count : 0;
-    const currCount = tiers[i].client_count;
-    if (leadsCount >= prevCount && leadsCount < currCount) {
-      selectedTier = tiers[i];
-      break;
-    }
-    if (leadsCount >= currCount) {
-      selectedTier = tiers[i];
-    }
-  }
-
-  const commission = revenue * (selectedTier.commission_percentage / 100);
-  setSimulatorResult({
-    tier: selectedTier.display_name,
-    tierColor: selectedTier.color,
-    commissionRate: selectedTier.commission_percentage,
-    revenue,
-    commission,
-    bonus: selectedTier.bonus_amount,
-    total: commission + selectedTier.bonus_amount,
-  });
-};
+<div className="min-w-0">
+  <h4 className="font-medium truncate">{ticket.subject}</h4>
+  <p className="text-xs text-muted-foreground mt-1">
+    {profile?.full_name && <span>{profile.full_name} • </span>}
+    {format(new Date(ticket.created_at), "dd/MM/yyyy HH:mm")}
+  </p>
+</div>
 ```
 
-### Arquivos Modificados
-- `src/pages/Commissions.tsx` - Atualizar o tab do Simulador
+**Linha ~273-275** - Atualizar o CardDescription para incluir o nome:
+```typescript
+<CardDescription>
+  Criado em {format(new Date(selectedTicket.created_at), "dd/MM/yyyy 'às' HH:mm")}
+  {profile?.full_name && <span className="block">por {profile.full_name}</span>}
+</CardDescription>
+```
 
-### Constantes Utilizadas
-- `BASE_VALUE_PER_LEAD = 2500` - Já definida em `useTiers.tsx`, será replicada no componente
+### Arquivo Modificado
+- `src/pages/Support.tsx`
+
+## Observação
+Como os afiliados só visualizam seus próprios tickets nesta tela, o nome do usuário será sempre o mesmo (do usuário logado). Para uma experiência mais rica onde cada ticket pudesse ter um criador diferente (cenário futuro), seria necessário modificar o hook `useSupportTickets` para fazer join com a tabela `profiles`.
