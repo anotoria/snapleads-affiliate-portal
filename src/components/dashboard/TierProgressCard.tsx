@@ -1,4 +1,4 @@
-import { Award, Trophy, Gem, Diamond, Shield, Crown, TrendingUp, Lightbulb } from "lucide-react";
+import { Award, Trophy, Gem, Diamond, Shield, Crown, TrendingUp, Lightbulb, Users, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -34,9 +34,17 @@ export const TierProgressCard = () => {
   const { t } = useLanguage();
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
   
-  // Use monthly revenue to calculate tier progress
-  const currentRevenue = metrics?.monthlyRevenue || 0;
-  const { currentTier, nextTier, progress, isLoading: tierLoading } = useUserTierProgress(currentRevenue);
+  // Use active leads count to calculate tier progress
+  const activeLeadsCount = metrics?.activeLeads || 0;
+  const { 
+    currentTier, 
+    nextTier, 
+    progress, 
+    leadsToNextTier,
+    currentRevenue,
+    revenueToNextTier,
+    isLoading: tierLoading 
+  } = useUserTierProgress(activeLeadsCount);
 
   const isLoading = metricsLoading || tierLoading;
 
@@ -61,9 +69,7 @@ export const TierProgressCard = () => {
     return null;
   }
 
-  const amountToNextTier = nextTier 
-    ? nextTier.min_revenue - currentRevenue 
-    : 0;
+  const nextTierLeads = nextTier?.client_count || 0;
 
   return (
     <motion.div
@@ -98,7 +104,7 @@ export const TierProgressCard = () => {
           </div>
 
           {/* Progress Bar */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Progress 
               value={progress} 
               className="h-3"
@@ -108,13 +114,28 @@ export const TierProgressCard = () => {
             />
             
             {nextTier && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {formatCurrency(currentRevenue)} de {formatCurrency(nextTier.min_revenue)}
-                </span>
-                <span className="text-primary font-medium">
-                  {t.dashboard.remaining || "Falta"} {formatCurrency(Math.max(0, amountToNextTier))}
-                </span>
+              <div className="space-y-2">
+                {/* Lead Count Row */}
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    <span>{activeLeadsCount} de {nextTierLeads} leads ativos</span>
+                  </div>
+                  <span className="text-primary font-medium">
+                    {t.dashboard.remaining || "Faltam"} {leadsToNextTier} leads
+                  </span>
+                </div>
+                
+                {/* Revenue Row */}
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <DollarSign className="h-4 w-4" />
+                    <span>{formatCurrency(currentRevenue)} de {formatCurrency(nextTier.min_revenue)}</span>
+                  </div>
+                  <span className="text-primary font-medium">
+                    {t.dashboard.remaining || "Falta"} {formatCurrency(revenueToNextTier)}
+                  </span>
+                </div>
               </div>
             )}
           </div>

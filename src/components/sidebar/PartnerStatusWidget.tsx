@@ -9,8 +9,9 @@ export const PartnerStatusWidget = ({ collapsed }: { collapsed: boolean }) => {
   const { t } = useLanguage();
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
   
-  const currentRevenue = metrics?.monthlyRevenue || 0;
-  const { currentTier, nextTier, progress, isLoading: tierLoading } = useUserTierProgress(currentRevenue);
+  // Use active leads count to calculate tier progress
+  const activeLeadsCount = metrics?.activeLeads || 0;
+  const { currentTier, nextTier, progress, leadsToNextTier, isLoading: tierLoading } = useUserTierProgress(activeLeadsCount);
 
   const isLoading = metricsLoading || tierLoading;
 
@@ -40,9 +41,9 @@ export const PartnerStatusWidget = ({ collapsed }: { collapsed: boolean }) => {
         <span className="text-xs text-muted-foreground">
           {t.dashboard.partnerStatus || "Status do Parceiro"}
         </span>
-        {metrics?.activeLeads !== undefined && (
+        {activeLeadsCount !== undefined && (
           <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-            {metrics.activeLeads}
+            {activeLeadsCount} leads
           </Badge>
         )}
       </div>
@@ -60,7 +61,7 @@ export const PartnerStatusWidget = ({ collapsed }: { collapsed: boolean }) => {
         <span>{currentTier.commission_percentage}% {t.dashboard.commission || "Comissão"}</span>
         {nextTier && (
           <span>
-            {Math.round(100 - progress)}% {t.dashboard.toReach || "para"} {nextTier.display_name}
+            {leadsToNextTier} leads {t.dashboard.toReach || "para"} {nextTier.display_name}
           </span>
         )}
       </div>
