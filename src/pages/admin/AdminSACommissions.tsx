@@ -10,7 +10,7 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
-import { DollarSign, Users, Percent, TrendingUp, Settings, ShieldAlert } from "lucide-react";
+import { DollarSign, Users, TrendingUp, Settings, ShieldAlert } from "lucide-react";
 import { Navigate } from "react-router-dom";
 
 const formatCurrency = (value: number) => {
@@ -31,10 +31,6 @@ const AdminSACommissions = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  const averageSACommission =
-    data?.totals.totalAffiliates && data.totals.totalAffiliates > 0
-      ? data.totals.totalSACommission / data.totals.totalAffiliates
-      : 0;
 
   return (
     <AdminLayout>
@@ -100,6 +96,13 @@ const AdminSACommissions = () => {
                 variant="success"
               />
               <SACommissionCard
+                title="Total Comissão Afiliados"
+                value={formatCurrency(data?.totals.totalAffiliateCommission || 0)}
+                subtitle="Este mês"
+                icon={DollarSign}
+                variant="warning"
+              />
+              <SACommissionCard
                 title="Afiliados Ativos"
                 value={data?.totals.totalAffiliates || 0}
                 subtitle="Com clientes ativos"
@@ -112,13 +115,6 @@ const AdminSACommissions = () => {
                 subtitle="Ativos na plataforma"
                 icon={TrendingUp}
                 variant="default"
-              />
-              <SACommissionCard
-                title="Média por Afiliado"
-                value={formatCurrency(averageSACommission)}
-                subtitle="Comissão SA média"
-                icon={Percent}
-                variant="warning"
               />
             </>
           )}
