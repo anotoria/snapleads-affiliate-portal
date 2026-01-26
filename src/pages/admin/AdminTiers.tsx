@@ -138,6 +138,7 @@ const AdminTiers = () => {
                       <TableHead>Ordem</TableHead>
                       <TableHead>Nome</TableHead>
                       <TableHead>Faixa de Receita</TableHead>
+                      <TableHead className="text-center">Qtde Clientes</TableHead>
                       <TableHead className="text-center">Comissão</TableHead>
                       <TableHead className="text-right">Bônus</TableHead>
                       <TableHead>Status</TableHead>
@@ -147,7 +148,7 @@ const AdminTiers = () => {
                   <TableBody>
                     {tiers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           Nenhum tier cadastrado
                         </TableCell>
                       </TableRow>
@@ -171,6 +172,9 @@ const AdminTiers = () => {
                             {formatCurrency(Number(tier.min_revenue))}
                             {" - "}
                             {tier.max_revenue ? formatCurrency(Number(tier.max_revenue)) : "∞"}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline">{(tier as any).client_count || 0}</Badge>
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline">{tier.commission_percentage}%</Badge>

@@ -43,6 +43,8 @@ export const TierProgressCard = () => {
     leadsToNextTier,
     currentRevenue,
     revenueToNextTier,
+    nextTierLeads,
+    nextTierRevenue,
     isLoading: tierLoading 
   } = useUserTierProgress(activeLeadsCount);
 
@@ -68,8 +70,6 @@ export const TierProgressCard = () => {
   if (!currentTier) {
     return null;
   }
-
-  const nextTierLeads = nextTier?.client_count || 0;
 
   return (
     <motion.div
@@ -130,7 +130,7 @@ export const TierProgressCard = () => {
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <DollarSign className="h-4 w-4" />
-                    <span>{formatCurrency(currentRevenue)} de {formatCurrency(nextTier.min_revenue)}</span>
+                    <span>{formatCurrency(currentRevenue)} de {formatCurrency(nextTierRevenue)}</span>
                   </div>
                   <span className="text-primary font-medium">
                     {t.dashboard.remaining || "Falta"} {formatCurrency(revenueToNextTier)}
