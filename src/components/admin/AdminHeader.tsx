@@ -1,9 +1,7 @@
 import { Menu, LogOut, Globe, Moon, Sun, Shield } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTheme } from "@/hooks/useTheme";
-import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { Language } from "@/i18n/translations";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -22,26 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const AppHeader = () => {
+export const AdminHeader = () => {
   const { profile, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
-  const { isAdmin } = useAdminAccess();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const isOnAdminRoute = location.pathname.startsWith("/admin");
 
   const handleLanguageChange = (value: string) => {
     setLanguage(value as Language);
-  };
-
-  const handleModeToggle = () => {
-    if (isOnAdminRoute) {
-      navigate("/");
-    } else {
-      navigate("/admin");
-    }
   };
 
   return (
@@ -50,24 +35,13 @@ export const AppHeader = () => {
         <SidebarTrigger className="h-9 w-9">
           <Menu className="h-5 w-5" />
         </SidebarTrigger>
+        <div className="flex items-center gap-2 text-primary">
+          <Shield className="h-5 w-5" />
+          <span className="text-sm font-medium hidden sm:inline">{t.common.adminMode}</span>
+        </div>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* Admin Mode Toggle */}
-        {isAdmin && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleModeToggle}
-            className="gap-2"
-          >
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">
-              {isOnAdminRoute ? t.common.affiliateMode : t.common.adminMode}
-            </span>
-          </Button>
-        )}
-
         {/* Theme Toggle */}
         <Button
           variant="ghost"
@@ -95,7 +69,7 @@ export const AppHeader = () => {
           </SelectContent>
         </Select>
 
-        {/* User Menu - Only show logout */}
+        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
@@ -104,7 +78,7 @@ export const AppHeader = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <div className="px-2 py-1.5 text-sm text-muted-foreground">
-              {profile?.full_name || "User"}
+              {profile?.full_name || "Admin"}
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">

@@ -17,6 +17,14 @@ import Documents from "./pages/Documents";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
+// Admin Pages
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminAffiliates from "./pages/admin/AdminAffiliates";
+import AdminTiers from "./pages/admin/AdminTiers";
+import AdminPricing from "./pages/admin/AdminPricing";
+import AdminSupport from "./pages/admin/AdminSupport";
+import AdminAdmins from "./pages/admin/AdminAdmins";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -29,6 +37,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
+                {/* Affiliate Routes */}
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/leads" element={<Leads />} />
@@ -38,6 +47,15 @@ const App = () => (
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/support" element={<Support />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/affiliates" element={<AdminAffiliates />} />
+                <Route path="/admin/tiers" element={<AdminTiers />} />
+                <Route path="/admin/pricing" element={<AdminPricing />} />
+                <Route path="/admin/support" element={<AdminSupport />} />
+                <Route path="/admin/admins" element={<AdminAdmins />} />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
