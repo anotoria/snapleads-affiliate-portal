@@ -24,6 +24,8 @@ const tierIcons: Record<string, React.ElementType> = {
   crown: Crown,
 };
 
+const BASE_VALUE_PER_LEAD = 2500;
+
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -37,31 +39,53 @@ const Commissions = () => {
   const { data: commissions, isLoading: commissionsLoading } = useCommissions();
   const { totalEarned, totalPending, totalBonuses } = useCommissionsSummary();
   
-  const [simulatorRevenue, setSimulatorRevenue] = useState("");
+  const [simulatorLeads, setSimulatorLeads] = useState("");
   const [simulatorResult, setSimulatorResult] = useState<{
     tier: string;
+    tierColor: string;
+    commissionRate: number;
+    revenue: number;
     commission: number;
     bonus: number;
     total: number;
   } | null>(null);
 
+  // Calcula faturamento automaticamente quando leads mudam
+  const calculatedRevenue = (parseInt(simulatorLeads) || 0) * BASE_VALUE_PER_LEAD;
+
   const handleCalculate = () => {
-    const revenue = parseFloat(simulatorRevenue) || 0;
-    if (!tiers || revenue <= 0) return;
+    const leadsCount = parseInt(simulatorLeads) || 0;
+    if (!tiers || leadsCount <= 0) return;
 
-    const tier = tiers.find(
-      (t) => revenue >= t.min_revenue && (t.max_revenue === null || revenue <= t.max_revenue)
-    );
+    const revenue = leadsCount * BASE_VALUE_PER_LEAD;
 
-    if (tier) {
-      const commission = revenue * (tier.commission_percentage / 100);
-      setSimulatorResult({
-        tier: tier.display_name,
-        commission,
-        bonus: tier.bonus_amount,
-        total: commission + tier.bonus_amount,
-      });
+    // Encontrar tier baseado em client_count (ordenado por sort_order)
+    const sortedTiers = [...tiers].sort((a, b) => a.sort_order - b.sort_order);
+    let selectedTier = sortedTiers[0];
+    
+    for (let i = 0; i < sortedTiers.length; i++) {
+      const prevCount = i > 0 ? sortedTiers[i - 1].client_count : 0;
+      const currCount = sortedTiers[i].client_count;
+      
+      if (leadsCount > prevCount && leadsCount <= currCount) {
+        selectedTier = sortedTiers[i];
+        break;
+      }
+      if (leadsCount > currCount) {
+        selectedTier = sortedTiers[i];
+      }
     }
+
+    const commission = revenue * (selectedTier.commission_percentage / 100);
+    setSimulatorResult({
+      tier: selectedTier.display_name,
+      tierColor: selectedTier.color,
+      commissionRate: selectedTier.commission_percentage,
+      revenue,
+      commission,
+      bonus: selectedTier.bonus_amount,
+      total: commission + selectedTier.bonus_amount,
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -275,40 +299,78 @@ const Commissions = () => {
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-4">
                       <div className="space-y-2">
+                        <Label htmlFor="leads">Qtde de Leads</Label>
+                        <Input
+                          id="leads"
+                          type="number"
+                          placeholder="25"
+                          min="1"
+                          value={simulatorLeads}
+                          onChange={(e) => setSimulatorLeads(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="revenue">{t.commissions.monthlyRevenue} (R$)</Label>
                         <Input
                           id="revenue"
-                          type="number"
-                          placeholder="100000"
-                          value={simulatorRevenue}
-                          onChange={(e) => setSimulatorRevenue(e.target.value)}
+                          type="text"
+                          value={formatCurrency(calculatedRevenue)}
+                          disabled
+                          className="bg-muted"
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Calculado: {simulatorLeads || 0} × {formatCurrency(BASE_VALUE_PER_LEAD)}
+                        </p>
                       </div>
-                      <Button onClick={handleCalculate} className="w-full">
+                      <Button onClick={handleCalculate} className="w-full" disabled={!simulatorLeads || parseInt(simulatorLeads) <= 0}>
                         {t.commissions.calculate}
                       </Button>
                     </div>
 
                     {simulatorResult && (
-                      <Card className="bg-muted/50">
+                      <Card className="bg-muted/50 border-2" style={{ borderColor: `${simulatorResult.tierColor}40` }}>
                         <CardContent className="pt-6">
                           <div className="space-y-4">
-                            <div className="text-center">
-                              <p className="text-sm text-muted-foreground">Nível</p>
-                              <p className="text-2xl font-bold text-primary">{simulatorResult.tier}</p>
+                            <div className="text-center pb-2 border-b">
+                              <p className="text-sm text-muted-foreground">Faixa de Parceria</p>
+                              <p 
+                                className="text-2xl font-bold"
+                                style={{ color: simulatorResult.tierColor }}
+                              >
+                                {simulatorResult.tier}
+                              </p>
+                              <Badge 
+                                variant="outline" 
+                                className="mt-1"
+                                style={{ borderColor: simulatorResult.tierColor, color: simulatorResult.tierColor }}
+                              >
+                                {simulatorResult.commissionRate}% comissão
+                              </Badge>
                             </div>
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span>{t.commissions.estimatedCommission}:</span>
-                                <span className="font-medium">{formatCurrency(simulatorResult.commission)}</span>
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2">
+                                  💰 Faturamento Total:
+                                </span>
+                                <span className="font-medium">{formatCurrency(simulatorResult.revenue)}</span>
                               </div>
-                              <div className="flex justify-between">
-                                <span>{t.commissions.bonus}:</span>
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2">
+                                  📈 Comissão Estimada:
+                                </span>
+                                <span className="font-medium text-primary">{formatCurrency(simulatorResult.commission)}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground flex items-center gap-2">
+                                  🎁 Bônus do Nível:
+                                </span>
                                 <span className="font-medium text-success">{formatCurrency(simulatorResult.bonus)}</span>
                               </div>
-                              <div className="border-t pt-2 flex justify-between">
-                                <span className="font-semibold">{t.commissions.total}:</span>
-                                <span className="font-bold text-lg">{formatCurrency(simulatorResult.total)}</span>
+                              <div className="border-t pt-3 flex justify-between items-center">
+                                <span className="font-semibold flex items-center gap-2">
+                                  ✅ TOTAL:
+                                </span>
+                                <span className="font-bold text-xl text-success">{formatCurrency(simulatorResult.total)}</span>
                               </div>
                             </div>
                           </div>
