@@ -2,10 +2,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret, x-webhook-timestamp, x-webhook-signature",
 };
 
-// Validation helpers
+// ==========================================
+// Validation Helpers
+// ==========================================
+
 const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email) && email.length <= 255;
@@ -16,13 +19,141 @@ const isValidUUID = (uuid: string): boolean => {
   return uuidRegex.test(uuid);
 };
 
+// Enhanced sanitization - removes HTML tags and script content
 const sanitizeString = (str: string, maxLength: number = 255): string => {
-  return str.trim().slice(0, maxLength);
+  // Remove HTML tags
+  let sanitized = str.replace(/<[^>]*>/g, '');
+  // Remove script-like content
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+  // Remove common XSS patterns
+  sanitized = sanitized.replace(/<script[\s\S]*?<\/script>/gi, '');
+  sanitized = sanitized.replace(/&lt;script[\s\S]*?&lt;\/script&gt;/gi, '');
+  return sanitized.trim().slice(0, maxLength);
 };
+
+// CNPJ validation (Brazilian Tax ID - 14 digits)
+const isValidCNPJ = (cnpj: string): boolean => {
+  // Remove non-numeric characters
+  const cleanCNPJ = cnpj.replace(/\D/g, '');
+  // Must be exactly 14 digits
+  if (cleanCNPJ.length !== 14) return false;
+  // Check for repeated digits (invalid CNPJs)
+  if (/^(\d)\1+$/.test(cleanCNPJ)) return false;
+  return true;
+};
+
+// Phone number validation (allows various formats, requires min 10 digits)
+const isValidPhone = (phone: string): boolean => {
+  const cleanPhone = phone.replace(/\D/g, '');
+  return cleanPhone.length >= 10 && cleanPhone.length <= 15;
+};
+
+// URL validation (must be https or valid storage URL)
+const isValidURL = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    // Only allow https URLs or Supabase storage URLs
+    const allowedSchemes = ['https:', 'http:'];
+    return allowedSchemes.includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
+// Secure URL validation for file storage (only allow known domains)
+const isValidStorageURL = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    const allowedDomains = [
+      'supabase.co',
+      'supabase.com',
+      'storage.googleapis.com',
+    ];
+    return allowedDomains.some(domain => parsed.hostname.endsWith(domain)) || 
+           parsed.hostname === 'localhost';
+  } catch {
+    return false;
+  }
+};
+
+// Reference month validation (YYYY-MM format with valid date)
+const isValidReferenceMonth = (month: string): boolean => {
+  if (!/^\d{4}-\d{2}$/.test(month)) return false;
+  const [year, monthNum] = month.split('-').map(Number);
+  return year >= 2000 && year <= 2100 && monthNum >= 1 && monthNum <= 12;
+};
+
+// HMAC signature verification for enhanced security
+async function verifyHMACSignature(
+  payload: string,
+  signature: string,
+  timestamp: string,
+  secret: string
+): Promise<boolean> {
+  try {
+    // Check timestamp to prevent replay attacks (5 minute window)
+    const requestTime = parseInt(timestamp, 10);
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (Math.abs(currentTime - requestTime) > 300) {
+      console.warn("Request timestamp outside acceptable window");
+      return false;
+    }
+
+    // Compute expected signature
+    const signaturePayload = `${timestamp}.${payload}`;
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const messageData = encoder.encode(signaturePayload);
+
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    const signatureBuffer = await crypto.subtle.sign("HMAC", key, messageData);
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    return signature === expectedSignature;
+  } catch (error) {
+    console.error("HMAC verification error:", error);
+    return false;
+  }
+}
+
+// Audit logging for sensitive operations
+interface AuditLogEntry {
+  timestamp: string;
+  action: string;
+  table?: string;
+  sourceIP?: string;
+  userAgent?: string;
+  success: boolean;
+  details?: Record<string, unknown>;
+}
+
+function logAudit(entry: AuditLogEntry): void {
+  console.log("[AUDIT]", JSON.stringify({
+    ...entry,
+    timestamp: new Date().toISOString(),
+  }));
+}
 
 // Types
 type TableName = "profiles" | "leads" | "payouts" | "users" | "user_roles" | "tiers" | "pricing_tiers" | "commission_history" | "documents" | "support_tickets" | "support_messages";
 type ActionType = "insert" | "update" | "upsert" | "get" | "delete" | "calculate_tier" | "calculate_commission" | "deactivate_user" | "activate_user" | "reset_password" | "get_admin_summary";
+
+// Sensitive actions that require enhanced logging
+const SENSITIVE_ACTIONS: ActionType[] = [
+  "insert", "update", "delete", 
+  "deactivate_user", "activate_user", "reset_password",
+  "calculate_commission"
+];
 
 interface WebhookPayload {
   action: ActionType;
@@ -78,11 +209,22 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const sourceIP = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  const userAgent = req.headers.get("user-agent") || "unknown";
+
   try {
     const webhookSecret = req.headers.get("x-webhook-secret");
     const expectedSecret = Deno.env.get("N8N_WEBHOOK_SECRET");
 
     if (!webhookSecret || webhookSecret !== expectedSecret) {
+      logAudit({
+        timestamp: new Date().toISOString(),
+        action: "auth_failure",
+        sourceIP,
+        userAgent,
+        success: false,
+        details: { reason: "Invalid webhook secret" }
+      });
       console.error("Invalid webhook secret");
       return new Response(
         JSON.stringify({ success: false, error: "Unauthorized - Invalid webhook secret" }),
@@ -90,7 +232,41 @@ Deno.serve(async (req) => {
       );
     }
 
-    const payload: WebhookPayload = await req.json();
+    // Get raw payload for HMAC verification
+    const rawPayload = await req.text();
+    const payload: WebhookPayload = JSON.parse(rawPayload);
+
+    // Optional HMAC verification for enhanced security
+    // If signature headers are present, verify them
+    const hmacSignature = req.headers.get("x-webhook-signature");
+    const hmacTimestamp = req.headers.get("x-webhook-timestamp");
+    const hmacSecret = Deno.env.get("N8N_WEBHOOK_HMAC_SECRET");
+
+    if (hmacSignature && hmacTimestamp && hmacSecret) {
+      const isValidSignature = await verifyHMACSignature(
+        rawPayload,
+        hmacSignature,
+        hmacTimestamp,
+        hmacSecret
+      );
+
+      if (!isValidSignature) {
+        logAudit({
+          timestamp: new Date().toISOString(),
+          action: "hmac_verification_failure",
+          sourceIP,
+          userAgent,
+          success: false,
+          details: { reason: "Invalid HMAC signature" }
+        });
+        console.error("Invalid HMAC signature");
+        return new Response(
+          JSON.stringify({ success: false, error: "Unauthorized - Invalid request signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     console.log("Received webhook payload:", JSON.stringify(payload, null, 2));
 
     if (!payload.action) {
@@ -114,6 +290,23 @@ Deno.serve(async (req) => {
     );
 
     const { action, table, data, match, filters } = payload;
+
+    // Log sensitive actions
+    if (SENSITIVE_ACTIONS.includes(action)) {
+      logAudit({
+        timestamp: new Date().toISOString(),
+        action,
+        table,
+        sourceIP,
+        userAgent,
+        success: true,
+        details: { 
+          hasData: !!data, 
+          hasMatch: !!match,
+          targetUserId: data?.user_id || match?.user_id || null
+        }
+      });
+    }
 
     // Handle special actions that don't require a table
     if (action === "get_admin_summary") {
@@ -267,9 +460,18 @@ Deno.serve(async (req) => {
           );
         }
 
+        // Validate match parameters
+        const matchValidation = validateMatchParameters(match);
+        if (matchValidation.error) {
+          return new Response(
+            JSON.stringify({ success: false, error: matchValidation.error }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
         let query = supabase.from(table).update(validatedData.data);
         
-        for (const [key, value] of Object.entries(match)) {
+        for (const [key, value] of Object.entries(matchValidation.validated!)) {
           query = query.eq(key, value);
         }
 
@@ -302,12 +504,62 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     console.error("Webhook error:", error);
     const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    logAudit({
+      timestamp: new Date().toISOString(),
+      action: "error",
+      sourceIP,
+      userAgent,
+      success: false,
+      details: { error: errorMessage }
+    });
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
+
+// ==========================================
+// Match Parameter Validation
+// ==========================================
+
+function validateMatchParameters(match: Record<string, unknown>): { validated?: Record<string, unknown>; error?: string } {
+  const validated: Record<string, unknown> = {};
+  
+  for (const [key, value] of Object.entries(match)) {
+    // Only allow specific keys for matching
+    const allowedKeys = ['id', 'user_id', 'email', 'ticket_id', 'role'];
+    if (!allowedKeys.includes(key)) {
+      return { error: `Invalid match key: ${key}. Allowed keys: ${allowedKeys.join(', ')}` };
+    }
+    
+    // Validate UUID fields
+    if (['id', 'user_id', 'ticket_id'].includes(key)) {
+      if (typeof value !== 'string' || !isValidUUID(value)) {
+        return { error: `Invalid ${key} format: must be a valid UUID` };
+      }
+    }
+    
+    // Validate email
+    if (key === 'email') {
+      if (typeof value !== 'string' || !isValidEmail(value)) {
+        return { error: `Invalid email format` };
+      }
+    }
+    
+    // Validate role
+    if (key === 'role') {
+      const validRoles = ['admin', 'super_admin', 'user'];
+      if (typeof value !== 'string' || !validRoles.includes(value)) {
+        return { error: `Invalid role. Must be one of: ${validRoles.join(', ')}` };
+      }
+    }
+    
+    validated[key] = value;
+  }
+  
+  return { validated };
+}
 
 // ==========================================
 // GET Operations
@@ -334,8 +586,19 @@ async function handleGetOperation(
   table: TableName,
   filters?: GetFilters
 ): Promise<{ success: boolean; result?: unknown; error?: string }> {
-  const limit = filters?.limit || 100;
-  const offset = filters?.offset || 0;
+  const limit = Math.min(Math.max(filters?.limit || 100, 1), 1000); // Clamp between 1 and 1000
+  const offset = Math.max(filters?.offset || 0, 0);
+
+  // Validate filter values
+  if (filters?.user_id && !isValidUUID(filters.user_id)) {
+    return { success: false, error: "Invalid user_id filter format" };
+  }
+  if (filters?.ticket_id && !isValidUUID(filters.ticket_id)) {
+    return { success: false, error: "Invalid ticket_id filter format" };
+  }
+  if (filters?.reference_month && !isValidReferenceMonth(filters.reference_month)) {
+    return { success: false, error: "Invalid reference_month format (must be YYYY-MM)" };
+  }
 
   try {
     switch (table) {
@@ -606,6 +869,12 @@ async function handleDeleteOperation(
     return { success: false, error: "Delete action requires 'match' field to identify record" };
   }
 
+  // Validate match parameters
+  const matchValidation = validateMatchParameters(match);
+  if (matchValidation.error) {
+    return { success: false, error: matchValidation.error };
+  }
+
   // Only allow delete on certain tables
   const deletableTables: TableName[] = ["documents", "support_tickets", "support_messages", "user_roles"];
   if (!deletableTables.includes(table)) {
@@ -627,7 +896,7 @@ async function handleDeleteOperation(
 
     let query = supabase.from(table).delete();
     
-    for (const [key, value] of Object.entries(match)) {
+    for (const [key, value] of Object.entries(matchValidation.validated!)) {
       query = query.eq(key, value);
     }
 
@@ -655,6 +924,21 @@ async function handleUserOperation(
   
   if (data.email && !isValidEmail(data.email)) {
     return { success: false, error: "Invalid email format" };
+  }
+
+  // Validate CNPJ if provided
+  if (data.cnpj && !isValidCNPJ(data.cnpj)) {
+    return { success: false, error: "Invalid CNPJ format (must be 14 digits)" };
+  }
+
+  // Validate phone if provided
+  if (data.phone && !isValidPhone(data.phone)) {
+    return { success: false, error: "Invalid phone format (must be 10-15 digits)" };
+  }
+
+  // Validate affiliate_url if provided
+  if (data.affiliate_url && !isValidURL(data.affiliate_url)) {
+    return { success: false, error: "Invalid affiliate_url format (must be a valid URL)" };
   }
 
   if (action === "insert") {
@@ -685,13 +969,18 @@ async function handleUserOperation(
       
       if (data.full_name) profileUpdate.full_name = sanitizeString(data.full_name, 100);
       if (data.company_name) profileUpdate.company_name = sanitizeString(data.company_name, 200);
-      if (data.cnpj) profileUpdate.cnpj = sanitizeString(data.cnpj, 20);
-      if (data.phone) profileUpdate.phone = sanitizeString(data.phone, 20);
+      if (data.cnpj) profileUpdate.cnpj = data.cnpj.replace(/\D/g, ''); // Store only digits
+      if (data.phone) profileUpdate.phone = data.phone.replace(/\D/g, ''); // Store only digits
       if (data.tier_level) profileUpdate.tier_level = data.tier_level;
       
       if (data.affiliate_url) {
-        const affiliateCode = data.affiliate_url.replace(/^https?:\/\/(www\.)?snapleads\.com\/?/, '').replace(/^\//, '');
-        profileUpdate.affiliate_code = sanitizeString(affiliateCode || data.affiliate_url, 255);
+        try {
+          const url = new URL(data.affiliate_url);
+          const affiliateCode = url.pathname.replace(/^\//, '') || url.searchParams.get('ref') || data.affiliate_url;
+          profileUpdate.affiliate_code = sanitizeString(affiliateCode, 255);
+        } catch {
+          profileUpdate.affiliate_code = sanitizeString(data.affiliate_url, 255);
+        }
       } else if (data.affiliate_code) {
         profileUpdate.affiliate_code = sanitizeString(data.affiliate_code, 255);
       }
@@ -765,13 +1054,18 @@ async function handleUserOperation(
     
     if (data.full_name) profileUpdate.full_name = sanitizeString(data.full_name, 100);
     if (data.company_name) profileUpdate.company_name = sanitizeString(data.company_name, 200);
-    if (data.cnpj) profileUpdate.cnpj = sanitizeString(data.cnpj, 20);
-    if (data.phone) profileUpdate.phone = sanitizeString(data.phone, 20);
+    if (data.cnpj) profileUpdate.cnpj = data.cnpj.replace(/\D/g, '');
+    if (data.phone) profileUpdate.phone = data.phone.replace(/\D/g, '');
     if (data.tier_level) profileUpdate.tier_level = data.tier_level;
     
     if (data.affiliate_url) {
-      const affiliateCode = data.affiliate_url.replace(/^https?:\/\/(www\.)?snapleads\.com\/?/, '').replace(/^\//, '');
-      profileUpdate.affiliate_code = sanitizeString(affiliateCode || data.affiliate_url, 255);
+      try {
+        const url = new URL(data.affiliate_url);
+        const affiliateCode = url.pathname.replace(/^\//, '') || url.searchParams.get('ref') || data.affiliate_url;
+        profileUpdate.affiliate_code = sanitizeString(affiliateCode, 255);
+      } catch {
+        profileUpdate.affiliate_code = sanitizeString(data.affiliate_url, 255);
+      }
     } else if (data.affiliate_code) {
       profileUpdate.affiliate_code = sanitizeString(data.affiliate_code, 255);
     }
@@ -856,9 +1150,17 @@ async function handleUserRolesOperation(
       return { success: false, error: "match.user_id is required to delete role" };
     }
 
+    if (!isValidUUID(String(match.user_id))) {
+      return { success: false, error: "Invalid user_id format" };
+    }
+
     let query = supabase.from("user_roles").delete().eq("user_id", match.user_id);
     
     if (match.role) {
+      const validRoles = ["admin", "super_admin", "user"];
+      if (!validRoles.includes(String(match.role))) {
+        return { success: false, error: `Invalid role. Must be one of: ${validRoles.join(", ")}` };
+      }
       query = query.eq("role", match.role);
     }
 
@@ -919,29 +1221,29 @@ async function handleAdminSummary(supabase: any): Promise<{ success: boolean; re
       resolved: tickets?.filter((t: { status: string }) => t.status === "resolved").length || 0,
     };
 
-    // Get affiliates by tier
-    const { data: profilesByTier } = await supabase.from("profiles").select("tier_level");
-    const tierStats: Record<string, number> = {};
-    profilesByTier?.forEach((p: { tier_level: string }) => {
-      tierStats[p.tier_level] = (tierStats[p.tier_level] || 0) + 1;
-    });
+    // Get commission history summary
+    const { data: commissions } = await supabase.from("commission_history").select("status, total_value");
+    const commissionStats = {
+      total: commissions?.length || 0,
+      pending: commissions?.filter((c: { status: string }) => c.status === "pending").length || 0,
+      pending_value: commissions?.filter((c: { status: string }) => c.status === "pending").reduce((sum: number, c: { total_value: number }) => sum + (c.total_value || 0), 0) || 0,
+      paid_value: commissions?.filter((c: { status: string }) => c.status === "completed").reduce((sum: number, c: { total_value: number }) => sum + (c.total_value || 0), 0) || 0,
+    };
 
     return {
       success: true,
       result: {
         action: "admin_summary",
-        data: {
-          affiliates: {
-            total: totalAffiliates || 0,
-            active: activeAffiliates || 0,
-            inactive: (totalAffiliates || 0) - (activeAffiliates || 0),
-            by_tier: tierStats,
-          },
-          leads: leadsStats,
-          payouts: payoutsStats,
-          support_tickets: ticketsStats,
-          generated_at: new Date().toISOString(),
+        affiliates: {
+          total: totalAffiliates || 0,
+          active: activeAffiliates || 0,
+          inactive: (totalAffiliates || 0) - (activeAffiliates || 0),
         },
+        leads: leadsStats,
+        payouts: payoutsStats,
+        tickets: ticketsStats,
+        commissions: commissionStats,
+        generated_at: new Date().toISOString(),
       },
     };
   } catch (error: unknown) {
@@ -959,60 +1261,40 @@ async function handleCalculateTier(
     return { success: false, error: "Valid user_id is required" };
   }
 
-  const monthlyRevenue = Number(data.monthly_revenue || 0);
-
   try {
-    // Get the appropriate tier based on revenue
-    const { data: tiers, error: tierError } = await supabase
+    // Get user's active leads to calculate monthly revenue
+    const { data: leads, error: leadsError } = await supabase
+      .from("leads")
+      .select("monthly_value")
+      .eq("user_id", data.user_id)
+      .eq("status", "active");
+
+    if (leadsError) return { success: false, error: leadsError.message };
+
+    const monthlyRevenue = leads?.reduce((sum: number, lead: { monthly_value: number }) => sum + (lead.monthly_value || 0), 0) || 0;
+
+    // Get all active tiers ordered by min_revenue
+    const { data: tiers, error: tiersError } = await supabase
       .from("tiers")
       .select("*")
       .eq("is_active", true)
-      .lte("min_revenue", monthlyRevenue)
-      .order("min_revenue", { ascending: false })
-      .limit(1);
+      .order("min_revenue", { ascending: true });
 
-    if (tierError) return { success: false, error: tierError.message };
+    if (tiersError) return { success: false, error: tiersError.message };
 
-    const tier = tiers?.[0];
-    if (!tier) {
-      return { success: false, error: "No tier found for the given revenue" };
-    }
-
-    // Check if revenue exceeds max_revenue (if defined)
-    if (tier.max_revenue && monthlyRevenue > tier.max_revenue) {
-      // Find next tier
-      const { data: nextTiers } = await supabase
-        .from("tiers")
-        .select("*")
-        .eq("is_active", true)
-        .gt("min_revenue", tier.max_revenue)
-        .order("min_revenue", { ascending: true })
-        .limit(1);
-
-      if (nextTiers?.[0]) {
-        // Use next tier instead
-        const nextTier = nextTiers[0];
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({ tier_level: nextTier.name })
-          .eq("user_id", data.user_id);
-
-        if (updateError) return { success: false, error: updateError.message };
-
-        return {
-          success: true,
-          result: {
-            action: "tier_calculated",
-            user_id: data.user_id,
-            monthly_revenue: monthlyRevenue,
-            tier: nextTier.name,
-            commission_percentage: nextTier.commission_percentage,
-            bonus_eligible: monthlyRevenue >= nextTier.min_revenue,
-            bonus_amount: nextTier.bonus_amount,
-          },
-        };
+    // Find the appropriate tier
+    let tier = tiers[0];
+    for (const t of tiers) {
+      if (monthlyRevenue >= t.min_revenue) {
+        tier = t;
+      } else {
+        break;
       }
     }
+
+    // Find next tier for progression info
+    const currentTierIndex = tiers.findIndex((t: { name: string }) => t.name === tier.name);
+    const nextTier = currentTierIndex < tiers.length - 1 ? tiers[currentTierIndex + 1] : null;
 
     // Update profile with new tier
     const { error: updateError } = await supabase
@@ -1030,8 +1312,13 @@ async function handleCalculateTier(
         monthly_revenue: monthlyRevenue,
         tier: tier.name,
         commission_percentage: tier.commission_percentage,
-        bonus_eligible: false,
-        bonus_amount: 0,
+        bonus_eligible: nextTier ? monthlyRevenue >= nextTier.min_revenue : false,
+        bonus_amount: tier.bonus_amount,
+        next_tier: nextTier ? {
+          name: nextTier.name,
+          min_revenue: nextTier.min_revenue,
+          progress: nextTier.min_revenue > 0 ? (monthlyRevenue / nextTier.min_revenue) * 100 : 100
+        } : null,
       },
     };
   } catch (error: unknown) {
@@ -1049,8 +1336,8 @@ async function handleCalculateCommission(
     return { success: false, error: "Valid user_id is required" };
   }
 
-  if (!data?.reference_month || !/^\d{4}-\d{2}$/.test(String(data.reference_month))) {
-    return { success: false, error: "reference_month is required in format YYYY-MM" };
+  if (!data?.reference_month || !isValidReferenceMonth(String(data.reference_month))) {
+    return { success: false, error: "reference_month is required in format YYYY-MM (valid month 01-12)" };
   }
 
   try {
@@ -1075,11 +1362,7 @@ async function handleCalculateCommission(
 
     if (tierError) return { success: false, error: tierError.message };
 
-    // Get active leads for this month
-    const startOfMonth = `${referenceMonth}-01T00:00:00Z`;
-    const endOfMonth = new Date(Number(referenceMonth.split("-")[0]), Number(referenceMonth.split("-")[1]), 0);
-    const endOfMonthStr = `${referenceMonth}-${String(endOfMonth.getDate()).padStart(2, "0")}T23:59:59Z`;
-
+    // Get active leads for this user
     const { data: activeLeads, error: leadsError } = await supabase
       .from("leads")
       .select("commission, monthly_value")
@@ -1149,6 +1432,11 @@ async function handleDeactivateUser(
     return { success: false, error: "Valid user_id is required" };
   }
 
+  // Validate deactivated_by if provided
+  if (data.deactivated_by && !isValidUUID(String(data.deactivated_by))) {
+    return { success: false, error: "Invalid deactivated_by format (must be UUID)" };
+  }
+
   try {
     const { error } = await supabase
       .from("profiles")
@@ -1166,7 +1454,7 @@ async function handleDeactivateUser(
       result: {
         action: "user_deactivated",
         user_id: data.user_id,
-        reason: data.reason || null,
+        reason: data.reason ? sanitizeString(String(data.reason), 500) : null,
         deactivated_at: new Date().toISOString(),
       },
     };
@@ -1295,12 +1583,27 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
         validated.user_id = data.user_id;
       }
       if (data.full_name !== undefined) validated.full_name = data.full_name ? sanitizeString(String(data.full_name), 100) : null;
-      if (data.avatar_url !== undefined) validated.avatar_url = data.avatar_url ? sanitizeString(String(data.avatar_url), 500) : null;
+      if (data.avatar_url !== undefined) {
+        if (data.avatar_url && !isValidURL(String(data.avatar_url))) {
+          return { error: "Invalid avatar_url format (must be valid URL)" };
+        }
+        validated.avatar_url = data.avatar_url ? sanitizeString(String(data.avatar_url), 500) : null;
+      }
       if (data.affiliate_code !== undefined) validated.affiliate_code = data.affiliate_code ? sanitizeString(String(data.affiliate_code), 255) : null;
       if (data.must_change_password !== undefined) validated.must_change_password = Boolean(data.must_change_password);
       if (data.company_name !== undefined) validated.company_name = data.company_name ? sanitizeString(String(data.company_name), 200) : null;
-      if (data.cnpj !== undefined) validated.cnpj = data.cnpj ? sanitizeString(String(data.cnpj), 20) : null;
-      if (data.phone !== undefined) validated.phone = data.phone ? sanitizeString(String(data.phone), 20) : null;
+      if (data.cnpj !== undefined) {
+        if (data.cnpj && !isValidCNPJ(String(data.cnpj))) {
+          return { error: "Invalid CNPJ format (must be 14 digits)" };
+        }
+        validated.cnpj = data.cnpj ? String(data.cnpj).replace(/\D/g, '') : null;
+      }
+      if (data.phone !== undefined) {
+        if (data.phone && !isValidPhone(String(data.phone))) {
+          return { error: "Invalid phone format (must be 10-15 digits)" };
+        }
+        validated.phone = data.phone ? String(data.phone).replace(/\D/g, '') : null;
+      }
       if (data.tier_level !== undefined) {
         const validTiers = ["silver", "gold", "platinum", "diamond", "titanium", "audaks"];
         if (!validTiers.includes(String(data.tier_level))) {
@@ -1337,12 +1640,12 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
       }
       if (data.commission !== undefined) {
         const commission = Number(data.commission);
-        if (isNaN(commission) || commission < 0) return { error: "Commission must be a positive number" };
+        if (isNaN(commission) || commission < 0) return { error: "Commission must be a non-negative number" };
         validated.commission = commission;
       }
       if (data.access_count !== undefined) {
         const accessCount = Number(data.access_count);
-        if (isNaN(accessCount) || accessCount < 0) return { error: "access_count must be a positive integer" };
+        if (isNaN(accessCount) || accessCount < 0) return { error: "access_count must be a non-negative integer" };
         validated.access_count = Math.floor(accessCount);
       }
       if (data.id) {
@@ -1395,7 +1698,7 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
       if (data.display_name !== undefined) validated.display_name = sanitizeString(String(data.display_name), 100);
       if (data.min_revenue !== undefined) {
         const minRevenue = Number(data.min_revenue);
-        if (isNaN(minRevenue) || minRevenue < 0) return { error: "min_revenue must be a positive number" };
+        if (isNaN(minRevenue) || minRevenue < 0) return { error: "min_revenue must be a non-negative number" };
         validated.min_revenue = minRevenue;
       }
       if (data.max_revenue !== undefined) {
@@ -1403,7 +1706,7 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
           validated.max_revenue = null;
         } else {
           const maxRevenue = Number(data.max_revenue);
-          if (isNaN(maxRevenue) || maxRevenue < 0) return { error: "max_revenue must be a positive number or null" };
+          if (isNaN(maxRevenue) || maxRevenue < 0) return { error: "max_revenue must be a non-negative number or null" };
           validated.max_revenue = maxRevenue;
         }
       }
@@ -1414,14 +1717,14 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
       }
       if (data.bonus_amount !== undefined) {
         const bonus = Number(data.bonus_amount);
-        if (isNaN(bonus) || bonus < 0) return { error: "bonus_amount must be a positive number" };
+        if (isNaN(bonus) || bonus < 0) return { error: "bonus_amount must be a non-negative number" };
         validated.bonus_amount = bonus;
       }
       if (data.color !== undefined) validated.color = sanitizeString(String(data.color), 20);
       if (data.icon !== undefined) validated.icon = data.icon ? sanitizeString(String(data.icon), 50) : null;
       if (data.sort_order !== undefined) {
         const sortOrder = Number(data.sort_order);
-        if (isNaN(sortOrder)) return { error: "sort_order must be a number" };
+        if (isNaN(sortOrder) || sortOrder < 0) return { error: "sort_order must be a non-negative integer" };
         validated.sort_order = Math.floor(sortOrder);
       }
       if (data.is_active !== undefined) validated.is_active = Boolean(data.is_active);
@@ -1438,7 +1741,7 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
       
       if (data.min_access !== undefined) {
         const minAccess = Number(data.min_access);
-        if (isNaN(minAccess) || minAccess < 0) return { error: "min_access must be a positive integer" };
+        if (isNaN(minAccess) || minAccess < 0) return { error: "min_access must be a non-negative integer" };
         validated.min_access = Math.floor(minAccess);
       }
       if (data.max_access !== undefined) {
@@ -1446,19 +1749,19 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
           validated.max_access = null;
         } else {
           const maxAccess = Number(data.max_access);
-          if (isNaN(maxAccess) || maxAccess < 0) return { error: "max_access must be a positive integer or null" };
+          if (isNaN(maxAccess) || maxAccess < 0) return { error: "max_access must be a non-negative integer or null" };
           validated.max_access = Math.floor(maxAccess);
         }
       }
       if (data.monthly_price !== undefined) {
         const price = Number(data.monthly_price);
-        if (isNaN(price) || price < 0) return { error: "monthly_price must be a positive number" };
+        if (isNaN(price) || price < 0) return { error: "monthly_price must be a non-negative number" };
         validated.monthly_price = price;
       }
       if (data.description !== undefined) validated.description = data.description ? sanitizeString(String(data.description), 255) : null;
       if (data.sort_order !== undefined) {
         const sortOrder = Number(data.sort_order);
-        if (isNaN(sortOrder)) return { error: "sort_order must be a number" };
+        if (isNaN(sortOrder) || sortOrder < 0) return { error: "sort_order must be a non-negative integer" };
         validated.sort_order = Math.floor(sortOrder);
       }
       if (data.is_active !== undefined) validated.is_active = Boolean(data.is_active);
@@ -1478,17 +1781,19 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
         validated.user_id = data.user_id;
       }
       if (data.reference_month !== undefined) {
-        if (!/^\d{4}-\d{2}$/.test(String(data.reference_month))) return { error: "reference_month must be in format YYYY-MM" };
+        if (!isValidReferenceMonth(String(data.reference_month))) {
+          return { error: "reference_month must be in format YYYY-MM (valid month 01-12)" };
+        }
         validated.reference_month = data.reference_month;
       }
       if (data.client_count !== undefined) {
         const count = Number(data.client_count);
-        if (isNaN(count) || count < 0) return { error: "client_count must be a positive integer" };
+        if (isNaN(count) || count < 0) return { error: "client_count must be a non-negative integer" };
         validated.client_count = Math.floor(count);
       }
       if (data.base_revenue !== undefined) {
         const revenue = Number(data.base_revenue);
-        if (isNaN(revenue) || revenue < 0) return { error: "base_revenue must be a positive number" };
+        if (isNaN(revenue) || revenue < 0) return { error: "base_revenue must be a non-negative number" };
         validated.base_revenue = revenue;
       }
       if (data.tier_name !== undefined) validated.tier_name = sanitizeString(String(data.tier_name), 50);
@@ -1499,17 +1804,17 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
       }
       if (data.commission_value !== undefined) {
         const value = Number(data.commission_value);
-        if (isNaN(value) || value < 0) return { error: "commission_value must be a positive number" };
+        if (isNaN(value) || value < 0) return { error: "commission_value must be a non-negative number" };
         validated.commission_value = value;
       }
       if (data.bonus_value !== undefined) {
         const bonus = Number(data.bonus_value);
-        if (isNaN(bonus) || bonus < 0) return { error: "bonus_value must be a positive number" };
+        if (isNaN(bonus) || bonus < 0) return { error: "bonus_value must be a non-negative number" };
         validated.bonus_value = bonus;
       }
       if (data.total_value !== undefined) {
         const total = Number(data.total_value);
-        if (isNaN(total) || total < 0) return { error: "total_value must be a positive number" };
+        if (isNaN(total) || total < 0) return { error: "total_value must be a non-negative number" };
         validated.total_value = total;
       }
       if (data.status !== undefined) {
@@ -1542,12 +1847,16 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
       }
       if (data.file_url !== undefined) {
         if (!data.file_url) return { error: "file_url is required" };
-        validated.file_url = sanitizeString(String(data.file_url), 1000);
+        const urlStr = String(data.file_url);
+        if (!isValidURL(urlStr)) {
+          return { error: "Invalid file_url format (must be valid URL)" };
+        }
+        validated.file_url = sanitizeString(urlStr, 1000);
       }
       if (data.file_type !== undefined) validated.file_type = sanitizeString(String(data.file_type), 20);
       if (data.file_size !== undefined) {
         const size = Number(data.file_size);
-        if (isNaN(size) || size < 0) return { error: "file_size must be a positive integer" };
+        if (isNaN(size) || size < 0) return { error: "file_size must be a non-negative integer" };
         validated.file_size = Math.floor(size);
       }
       if (data.category !== undefined) {
