@@ -68,16 +68,16 @@ const Auth = () => {
   const signUpSchema = z.object({
     fullName: z.string().min(2, t.auth.fullName),
     email: z.string().email(t.auth.email),
-    companyName: z.string().min(2, "Company name is required"),
+    companyName: z.string().min(2, t.auth.companyNameRequired),
     phone: z.string()
-      .min(10, "Phone must have at least 10 digits")
-      .max(15, "Phone must have at most 15 digits")
-      .regex(/^[0-9]+$/, "Phone must contain only numbers"),
+      .min(10, t.auth.phoneMinDigits)
+      .max(15, t.auth.phoneMaxDigits)
+      .regex(/^[0-9]+$/, t.auth.phoneOnlyNumbers),
     password: z.string().min(6, t.auth.password),
     confirmPassword: z.string(),
-    agreeNotifications: z.boolean().refine(val => val === true, "You must agree to receive notifications"),
+    agreeNotifications: z.boolean().refine(val => val === true, t.auth.mustAgreeNotifications),
   }).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: t.auth.passwordsDontMatch,
     path: ["confirmPassword"],
   });
 
@@ -86,10 +86,10 @@ const Auth = () => {
   });
 
   const changePasswordSchema = z.object({
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    newPassword: z.string().min(8, t.auth.passwordMinChars),
     confirmNewPassword: z.string(),
   }).refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "Passwords don't match",
+    message: t.auth.passwordsDontMatch,
     path: ["confirmNewPassword"],
   });
 
@@ -209,13 +209,13 @@ const Auth = () => {
               {mode === "login" && t.auth.welcomeBack}
               {mode === "signup" && t.auth.createAccount}
               {mode === "reset" && t.auth.resetPassword}
-              {mode === "change-password" && "Change Password"}
+              {mode === "change-password" && t.auth.changePassword}
             </CardTitle>
             <CardDescription className="mt-2 text-muted-foreground">
               {mode === "login" && t.auth.signInToContinue}
               {mode === "signup" && t.auth.startEarning}
               {mode === "reset" && t.auth.resetPasswordDescription}
-              {mode === "change-password" && "Please set a new password to continue"}
+              {mode === "change-password" && t.auth.setNewPasswordDescription}
             </CardDescription>
           </div>
         </CardHeader>
@@ -226,13 +226,13 @@ const Auth = () => {
               <Alert className="border-amber-500/50 bg-amber-500/10">
                 <ShieldAlert className="h-4 w-4 text-amber-500" />
                 <AlertDescription className="text-amber-700 dark:text-amber-300">
-                  Your account requires a password change before you can continue.
+                  {t.auth.passwordChangeRequired}
                 </AlertDescription>
               </Alert>
 
               <form onSubmit={changePasswordForm.handleSubmit(handleChangePassword)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-foreground">New Password</Label>
+                  <Label htmlFor="newPassword" className="text-foreground">{t.auth.newPassword}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -249,7 +249,7 @@ const Auth = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmNewPassword" className="text-foreground">Confirm New Password</Label>
+                  <Label htmlFor="confirmNewPassword" className="text-foreground">{t.auth.confirmNewPassword}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -266,7 +266,7 @@ const Auth = () => {
                 </div>
 
                 <GradientButton type="submit" isLoading={isLoading}>
-                  Update Password
+                  {t.auth.updatePassword}
                   <ArrowRight className="h-4 w-4" />
                 </GradientButton>
               </form>
@@ -363,7 +363,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="companyName" className="text-foreground">Company Name</Label>
+                <Label htmlFor="companyName" className="text-foreground">{t.auth.companyName}</Label>
                 <div className="relative">
                   <Building className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -380,7 +380,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-foreground">Phone Number</Label>
+                <Label htmlFor="phone" className="text-foreground">{t.auth.phoneNumber}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -414,7 +414,7 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="text-foreground">{t.auth.confirmPassword}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -440,7 +440,7 @@ const Auth = () => {
                   htmlFor="agreeNotifications"
                   className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
                 >
-                  I agree to receive email and phone notifications (like when I earn a commission) and other important notifications regarding the affiliate program.
+                  {t.auth.agreeNotifications}
                 </label>
               </div>
               {signUpForm.formState.errors.agreeNotifications && (
@@ -453,7 +453,7 @@ const Auth = () => {
                 rel="noopener noreferrer"
                 className="block text-center text-sm text-primary hover:underline"
               >
-                Ver portal de Afiliados
+                {t.auth.viewAffiliatePortal}
               </a>
 
               <GradientButton type="submit" isLoading={isLoading}>
