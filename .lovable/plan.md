@@ -1,158 +1,173 @@
 
-# Plano: Atualização Completa do Webhook e Documentação
+# Plano: Atualizar Formulário de Cadastro de Afiliados
 
 ## Resumo
+Expandir o formulário de signup para incluir novos campos obrigatórios (Company Name e Phone Number), um checkbox obrigatório de consentimento para notificações, e um link para o portal de afiliados.
 
-O webhook `n8n-webhook` está atualizado e funcional, mas a documentação está significativamente desatualizada. A documentação atual documenta apenas 4 tabelas e 4 actions, enquanto o webhook suporta 11 tabelas, 11 actions, e funcionalidades avançadas de segurança.
+## Alterações Visuais do Formulário
 
-## Análise de Discrepâncias
-
-### Tabelas não documentadas:
-| Tabela | Status |
-|--------|--------|
-| user_roles | Falta na documentação |
-| tiers | Falta na documentação |
-| pricing_tiers | Falta na documentação |
-| commission_history | Falta na documentação |
-| documents | Falta na documentação |
-| support_tickets | Falta na documentação |
-| support_messages | Falta na documentação |
-
-### Actions não documentadas:
-| Action | Descrição |
-|--------|-----------|
-| delete | Excluir registros (documents, support_tickets, support_messages, user_roles) |
-| calculate_tier | Calcular e atualizar nível do afiliado |
-| calculate_commission | Registrar comissão mensal |
-| deactivate_user | Desativar usuário |
-| activate_user | Ativar usuário |
-| reset_password | Redefinir senha |
-| get_admin_summary | Obter resumo administrativo |
-
-### Campos adicionais de usuário não documentados:
-- `company_name` - Nome da empresa
-- `cnpj` - CNPJ (14 dígitos)
-- `phone` - Telefone (10-15 dígitos)
-- `tier_level` - Nível do afiliado
-- `role` - Papel do usuário (admin, super_admin, user)
-
-### Funcionalidades de segurança não documentadas:
-- Verificação de assinatura HMAC (headers opcionais)
-- Audit logging para operações sensíveis
-- Validação de CNPJ e telefone
-- Sanitização de HTML/XSS
+### Layout Proposto
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                    [Logo SnapLeads]                             │
+│                    Portal de Afiliados                          │
+│                                                                 │
+│                     Create Account                              │
+│             Start earning with SnapLeads today                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Full Name:          [________________________]                 │
+│                                                                 │
+│  Email:              [________________________]                 │
+│                                                                 │
+│  Company Name:       [________________________]   (NOVO)        │
+│                                                                 │
+│  Phone Number:       [________________________]   (NOVO)        │
+│                                                                 │
+│  Password:           [________________________]                 │
+│                                                                 │
+│  Confirm Password:   [________________________]                 │
+│                                                                 │
+│  [✓] I agree to receive email and phone notifications          │
+│      (like when I earn a commission) and other important       │
+│      notifications regarding the affiliate program.  (NOVO)    │
+│                                                                 │
+│  Ver portal de Afiliados  (link externo)          (NOVO)        │
+│                                                                 │
+│              [ Sign Up → ]                                      │
+│                                                                 │
+│         Already have an account? Sign In                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Alterações Necessárias
 
-### 1. Atualização da Documentação (`docs/WEBHOOK_DOCUMENTATION.md`)
+### 1. Arquivo: `src/pages/Auth.tsx`
 
-A documentação será completamente reescrita para incluir:
+**Mudanças no tipo SignUpFormData:**
+```typescript
+type SignUpFormData = {
+  fullName: string;
+  email: string;
+  companyName: string;    // NOVO
+  phone: string;          // NOVO
+  password: string;
+  confirmPassword: string;
+  agreeNotifications: boolean;  // NOVO - checkbox obrigatório
+};
+```
 
-1. **Visão Geral Atualizada** - Refletir todas as 11 tabelas suportadas
-2. **Autenticação Avançada** - Incluir HMAC signature verification opcional
-3. **Payload Base Atualizado** - Incluir todas as actions disponíveis
-4. **Novas Seções de Tabelas**:
-   - Tiers (Níveis de Parceria)
-   - Pricing Tiers (Faixas de Preço)
-   - Commission History (Histórico de Comissões)
-   - Documents (Documentos)
-   - Support Tickets (Tickets de Suporte)
-   - Support Messages (Mensagens de Suporte)
-   - User Roles (Papéis de Usuário)
+**Atualização do schema de validação:**
+```typescript
+const signUpSchema = z.object({
+  fullName: z.string().min(2, "Full name is required"),
+  email: z.string().email("Invalid email address"),
+  companyName: z.string().min(2, "Company name is required"),
+  phone: z.string()
+    .min(10, "Phone must have at least 10 digits")
+    .max(15, "Phone must have at most 15 digits")
+    .regex(/^[0-9]+$/, "Phone must contain only numbers"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+  agreeNotifications: z.boolean()
+    .refine(val => val === true, "You must agree to receive notifications"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+```
 
-5. **Seção de Actions Especiais**:
-   - calculate_tier
-   - calculate_commission
-   - deactivate_user / activate_user
-   - reset_password
-   - get_admin_summary
+**Novos campos no formulário:**
+- Campo Company Name com ícone Building
+- Campo Phone Number com ícone Phone
+- Checkbox com texto de consentimento
+- Link externo "Ver portal de Afiliados"
 
-6. **Campos de Usuário Expandidos**:
-   - company_name, cnpj, phone, tier_level, role
+**Imports adicionais:**
+```typescript
+import { Building, Phone } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+```
 
-7. **Filtros Adicionais**:
-   - is_active, tier_level, category, priority, ticket_id, reference_month
+### 2. Arquivo: `src/hooks/useAuth.tsx`
 
-8. **Exemplos Completos** para cada nova funcionalidade
+**Atualização da função signUp:**
+```typescript
+const signUp = async (
+  email: string, 
+  password: string, 
+  fullName: string,
+  companyName: string,  // NOVO
+  phone: string         // NOVO
+) => {
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: redirectUrl,
+      data: {
+        full_name: fullName,
+        company_name: companyName,  // NOVO
+        phone: phone,               // NOVO
+      },
+    },
+  });
+  return { error };
+};
+```
+
+### 3. Migração SQL: Atualizar trigger `handle_new_user`
+
+O trigger precisa ser atualizado para capturar os novos campos do metadata:
+
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = ''
+AS $$
+BEGIN
+    INSERT INTO public.profiles (user_id, full_name, company_name, phone, affiliate_code)
+    VALUES (
+        NEW.id,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+        NEW.raw_user_meta_data->>'company_name',
+        NEW.raw_user_meta_data->>'phone',
+        'ref_' || substring(NEW.id::text, 1, 8)
+    );
+    RETURN NEW;
+END;
+$$;
+```
 
 ---
 
 ## Detalhes Técnicos
 
-### Arquivo Modificado
-- `docs/WEBHOOK_DOCUMENTATION.md`
+### Validação de Dados
+| Campo | Validação |
+|-------|-----------|
+| Full Name | Mínimo 2 caracteres |
+| Email | Formato de email válido |
+| Company Name | Mínimo 2 caracteres |
+| Phone Number | 10-15 dígitos, apenas números |
+| Password | Mínimo 6 caracteres |
+| Confirm Password | Deve ser igual ao Password |
+| Checkbox | Deve estar marcado (true) |
 
-### Estrutura da Nova Documentação
+### Arquivos Modificados
+1. `src/pages/Auth.tsx` - Formulário de cadastro
+2. `src/hooks/useAuth.tsx` - Função signUp com novos parâmetros
+3. Migração SQL - Atualizar trigger handle_new_user
 
-```text
-# SnapLeads Portal - Webhook n8n Documentation v2.0
+### Dependências Utilizadas
+- `Checkbox` de `@/components/ui/checkbox` (já existe)
+- Ícones `Building` e `Phone` de `lucide-react`
 
-## Visão Geral (atualizado)
-## Autenticação
-  - Header básico (x-webhook-secret)
-  - HMAC Signature (opcional)
-## URL Base
-## Estrutura da Requisição
-## Tabelas Suportadas (11 tabelas)
-  1. Users
-  2. Profiles
-  3. Leads
-  4. Payouts
-  5. Tiers (NOVO)
-  6. Pricing Tiers (NOVO)
-  7. Commission History (NOVO)
-  8. Documents (NOVO)
-  9. Support Tickets (NOVO)
-  10. Support Messages (NOVO)
-  11. User Roles (NOVO)
-## Actions Especiais (7 actions)
-  - calculate_tier (NOVO)
-  - calculate_commission (NOVO)
-  - deactivate_user (NOVO)
-  - activate_user (NOVO)
-  - reset_password (NOVO)
-  - get_admin_summary (NOVO)
-  - delete (NOVO)
-## Filtros Disponíveis (expandido)
-## Validações de Dados
-  - CNPJ (NOVO)
-  - Phone (NOVO)
-  - URL (NOVO)
-## Códigos de Resposta
-## Respostas de Erro
-## Exemplos Completos (expandido)
-## Segurança Avançada (NOVO)
-  - HMAC Verification
-  - Audit Logging
-## Notas Importantes
-## Changelog
-```
-
-### Conteúdo Principal a Adicionar
-
-**Seção: Tiers (Níveis de Parceria)**
-- GET com filtro is_active
-- INSERT/UPDATE/UPSERT com campos: name, display_name, min_revenue, max_revenue, commission_percentage, bonus_amount, color, icon, sort_order, client_count
-
-**Seção: Actions Especiais**
-- calculate_tier: Atualiza tier baseado em receita
-- calculate_commission: Registra comissão mensal
-- deactivate_user/activate_user: Gerencia status do usuário
-- reset_password: Redefine senha
-- get_admin_summary: KPIs do sistema
-
-**Seção: HMAC Signature (Segurança Avançada)**
-- Headers opcionais: x-webhook-signature, x-webhook-timestamp
-- Secret: N8N_WEBHOOK_HMAC_SECRET
-- Janela de tempo: 5 minutos
-
----
-
-## Impacto
-
-- **Não há mudanças no código do webhook** - O código está completo e funcional
-- **Apenas atualização da documentação** - Para refletir o estado atual
-- **Melhor integração com n8n** - Documentação completa facilita automações
-
+### Link Externo
+O link "Ver portal de Afiliados" abrirá em nova aba:
+- URL: https://snapleads.com.br/joinaffiliate
+- Atributos: `target="_blank" rel="noopener noreferrer"`
