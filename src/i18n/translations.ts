@@ -86,6 +86,7 @@ type NavTranslations = {
   adminPricing: string;
   adminSupport: string;
   adminAdmins: string;
+  adminSACommissions: string;
 };
 
 type LeadsTranslations = {
@@ -305,6 +306,15 @@ type AdminTranslations = {
   confirmDeactivate: string;
   confirmDelete: string;
   confirmResetPassword: string;
+  // SA Commissions
+  saCommissions: string;
+  saCommissionsSubtitle: string;
+  commissionCeiling: string;
+  basePlanValue: string;
+  affiliateRate: string;
+  saRate: string;
+  totalSACommission: string;
+  saSettings: string;
 };
 
 type TiersTranslations = {
@@ -465,6 +475,7 @@ export const translations = {
       adminPricing: "Pricing",
       adminSupport: "Support",
       adminAdmins: "Administrators",
+      adminSACommissions: "SA Commissions",
     },
 
     leads: {
@@ -684,6 +695,15 @@ export const translations = {
       confirmDeactivate: "Are you sure you want to deactivate this user?",
       confirmDelete: "Are you sure you want to delete this user? This action cannot be undone.",
       confirmResetPassword: "Are you sure you want to reset this user's password?",
+      // SA Commissions
+      saCommissions: "SA Commissions",
+      saCommissionsSubtitle: "Super Administrator commission management",
+      commissionCeiling: "Commission Ceiling",
+      basePlanValue: "Base Plan Value",
+      affiliateRate: "Affiliate Rate",
+      saRate: "SA Rate",
+      totalSACommission: "Total SA Commission",
+      saSettings: "Settings",
     },
 
     tiers: {
@@ -805,6 +825,7 @@ export const translations = {
       adminPricing: "Precificação",
       adminSupport: "Suporte",
       adminAdmins: "Administradores",
+      adminSACommissions: "Comissões SA",
     },
 
     leads: {
@@ -1024,6 +1045,15 @@ export const translations = {
       confirmDeactivate: "Tem certeza que deseja desativar este usuário?",
       confirmDelete: "Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.",
       confirmResetPassword: "Tem certeza que deseja resetar a senha deste usuário?",
+      // SA Commissions
+      saCommissions: "Comissões SA",
+      saCommissionsSubtitle: "Gerenciamento de comissões do Super Administrador",
+      commissionCeiling: "Teto de Comissão",
+      basePlanValue: "Valor Base do Plano",
+      affiliateRate: "% Afiliado",
+      saRate: "% SA",
+      totalSACommission: "Total Comissão SA",
+      saSettings: "Configurações",
     },
 
     tiers: {
@@ -1145,6 +1175,7 @@ export const translations = {
       adminPricing: "Precios",
       adminSupport: "Soporte",
       adminAdmins: "Administradores",
+      adminSACommissions: "Comisiones SA",
     },
 
     leads: {
@@ -1364,6 +1395,15 @@ export const translations = {
       confirmDeactivate: "¿Estás seguro de que deseas desactivar este usuario?",
       confirmDelete: "¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.",
       confirmResetPassword: "¿Estás seguro de que deseas restablecer la contraseña de este usuario?",
+      // SA Commissions
+      saCommissions: "Comisiones SA",
+      saCommissionsSubtitle: "Gestión de comisiones del Super Administrador",
+      commissionCeiling: "Techo de Comisión",
+      basePlanValue: "Valor Base del Plan",
+      affiliateRate: "% Afiliado",
+      saRate: "% SA",
+      totalSACommission: "Total Comisión SA",
+      saSettings: "Configuraciones",
     },
 
     tiers: {

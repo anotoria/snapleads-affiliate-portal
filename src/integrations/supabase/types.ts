@@ -275,6 +275,96 @@ export type Database = {
         }
         Relationships: []
       }
+      sa_commission_history: {
+        Row: {
+          affiliate_commission_rate: number
+          affiliate_commission_value: number
+          affiliate_name: string | null
+          affiliate_tier: string
+          affiliate_user_id: string
+          base_value_per_client: number
+          calculated_at: string
+          client_count: number
+          created_at: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          reference_month: string
+          sa_commission_rate: number
+          sa_commission_value: number
+          sa_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_commission_rate: number
+          affiliate_commission_value?: number
+          affiliate_name?: string | null
+          affiliate_tier: string
+          affiliate_user_id: string
+          base_value_per_client?: number
+          calculated_at?: string
+          client_count?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          reference_month: string
+          sa_commission_rate: number
+          sa_commission_value?: number
+          sa_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_commission_rate?: number
+          affiliate_commission_value?: number
+          affiliate_name?: string | null
+          affiliate_tier?: string
+          affiliate_user_id?: string
+          base_value_per_client?: number
+          calculated_at?: string
+          client_count?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          reference_month?: string
+          sa_commission_rate?: number
+          sa_commission_value?: number
+          sa_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sa_commission_settings: {
+        Row: {
+          base_plan_value: number
+          commission_ceiling: number
+          created_at: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          base_plan_value?: number
+          commission_ceiling?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          base_plan_value?: number
+          commission_ceiling?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           created_at: string

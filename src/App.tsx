@@ -24,6 +24,7 @@ import AdminTiers from "./pages/admin/AdminTiers";
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminAdmins from "./pages/admin/AdminAdmins";
+import AdminSACommissions from "./pages/admin/AdminSACommissions";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/admin/pricing" element={<AdminPricing />} />
                 <Route path="/admin/support" element={<AdminSupport />} />
                 <Route path="/admin/admins" element={<AdminAdmins />} />
+                <Route path="/admin/sa-commissions" element={<AdminSACommissions />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
