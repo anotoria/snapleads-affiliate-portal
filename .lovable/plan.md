@@ -1,173 +1,156 @@
 
-# Plano: Atualizar Formulário de Cadastro de Afiliados
+# Plano: Internacionalização Completa da Tela de Cadastro
 
 ## Resumo
-Expandir o formulário de signup para incluir novos campos obrigatórios (Company Name e Phone Number), um checkbox obrigatório de consentimento para notificações, e um link para o portal de afiliados.
+Adicionar todas as traduções faltantes para os campos do formulário de cadastro e tela de mudança de senha, garantindo que os textos sejam exibidos corretamente em inglês, português e espanhol.
 
-## Alterações Visuais do Formulário
+## Textos a Traduzir
 
-### Layout Proposto
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    [Logo SnapLeads]                             │
-│                    Portal de Afiliados                          │
-│                                                                 │
-│                     Create Account                              │
-│             Start earning with SnapLeads today                  │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  Full Name:          [________________________]                 │
-│                                                                 │
-│  Email:              [________________________]                 │
-│                                                                 │
-│  Company Name:       [________________________]   (NOVO)        │
-│                                                                 │
-│  Phone Number:       [________________________]   (NOVO)        │
-│                                                                 │
-│  Password:           [________________________]                 │
-│                                                                 │
-│  Confirm Password:   [________________________]                 │
-│                                                                 │
-│  [✓] I agree to receive email and phone notifications          │
-│      (like when I earn a commission) and other important       │
-│      notifications regarding the affiliate program.  (NOVO)    │
-│                                                                 │
-│  Ver portal de Afiliados  (link externo)          (NOVO)        │
-│                                                                 │
-│              [ Sign Up → ]                                      │
-│                                                                 │
-│         Already have an account? Sign In                        │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Novos campos do formulário de cadastro
+| Chave | EN | PT | ES |
+|-------|-------|-------|-------|
+| companyName | Company Name | Nome da Empresa | Nombre de la Empresa |
+| phoneNumber | Phone Number | Número de Telefone | Número de Teléfono |
+| confirmPassword | Confirm Password | Confirmar Senha | Confirmar Contraseña |
+| agreeNotifications | I agree to receive email and phone notifications (like when I earn a commission) and other important notifications regarding the affiliate program. | Eu concordo em receber notificações por email e telefone (como quando eu ganho uma comissão) e outras notificações importantes sobre o programa de afiliados. | Acepto recibir notificaciones por correo electrónico y teléfono (como cuando gano una comisión) y otras notificaciones importantes sobre el programa de afiliados. |
+| viewAffiliatePortal | View Affiliate Portal | Ver Portal de Afiliados | Ver Portal de Afiliados |
+
+### Tela de mudança de senha
+| Chave | EN | PT | ES |
+|-------|-------|-------|-------|
+| changePassword | Change Password | Alterar Senha | Cambiar Contraseña |
+| setNewPasswordDescription | Please set a new password to continue | Por favor, defina uma nova senha para continuar | Por favor, establezca una nueva contraseña para continuar |
+| passwordChangeRequired | Your account requires a password change before you can continue. | Sua conta requer uma alteração de senha antes de continuar. | Su cuenta requiere un cambio de contraseña antes de continuar. |
+| newPassword | New Password | Nova Senha | Nueva Contraseña |
+| confirmNewPassword | Confirm New Password | Confirmar Nova Senha | Confirmar Nueva Contraseña |
+| updatePassword | Update Password | Atualizar Senha | Actualizar Contraseña |
+
+### Mensagens de validação
+| Chave | EN | PT | ES |
+|-------|-------|-------|-------|
+| companyNameRequired | Company name is required | Nome da empresa é obrigatório | El nombre de la empresa es obligatorio |
+| phoneMinDigits | Phone must have at least 10 digits | Telefone deve ter pelo menos 10 dígitos | El teléfono debe tener al menos 10 dígitos |
+| phoneMaxDigits | Phone must have at most 15 digits | Telefone deve ter no máximo 15 dígitos | El teléfono debe tener como máximo 15 dígitos |
+| phoneOnlyNumbers | Phone must contain only numbers | Telefone deve conter apenas números | El teléfono debe contener solo números |
+| passwordsDontMatch | Passwords don't match | As senhas não coincidem | Las contraseñas no coinciden |
+| mustAgreeNotifications | You must agree to receive notifications | Você deve concordar em receber notificações | Debe aceptar recibir notificaciones |
+| passwordMinChars | Password must be at least 8 characters | A senha deve ter pelo menos 8 caracteres | La contraseña debe tener al menos 8 caracteres |
 
 ---
 
 ## Alterações Necessárias
 
-### 1. Arquivo: `src/pages/Auth.tsx`
+### 1. Arquivo: `src/i18n/translations.ts`
 
-**Mudanças no tipo SignUpFormData:**
+Adicionar novas chaves ao objeto `auth` em cada idioma:
+
+**Inglês (EN):**
 ```typescript
-type SignUpFormData = {
-  fullName: string;
-  email: string;
-  companyName: string;    // NOVO
-  phone: string;          // NOVO
-  password: string;
-  confirmPassword: string;
-  agreeNotifications: boolean;  // NOVO - checkbox obrigatório
-};
+auth: {
+  // ... chaves existentes ...
+  companyName: "Company Name",
+  phoneNumber: "Phone Number",
+  confirmPassword: "Confirm Password",
+  agreeNotifications: "I agree to receive email and phone notifications (like when I earn a commission) and other important notifications regarding the affiliate program.",
+  viewAffiliatePortal: "View Affiliate Portal",
+  changePassword: "Change Password",
+  setNewPasswordDescription: "Please set a new password to continue",
+  passwordChangeRequired: "Your account requires a password change before you can continue.",
+  newPassword: "New Password",
+  confirmNewPassword: "Confirm New Password",
+  updatePassword: "Update Password",
+  companyNameRequired: "Company name is required",
+  phoneMinDigits: "Phone must have at least 10 digits",
+  phoneMaxDigits: "Phone must have at most 15 digits",
+  phoneOnlyNumbers: "Phone must contain only numbers",
+  passwordsDontMatch: "Passwords don't match",
+  mustAgreeNotifications: "You must agree to receive notifications",
+  passwordMinChars: "Password must be at least 8 characters",
+}
 ```
 
-**Atualização do schema de validação:**
+**Português (PT):**
 ```typescript
-const signUpSchema = z.object({
-  fullName: z.string().min(2, "Full name is required"),
-  email: z.string().email("Invalid email address"),
-  companyName: z.string().min(2, "Company name is required"),
-  phone: z.string()
-    .min(10, "Phone must have at least 10 digits")
-    .max(15, "Phone must have at most 15 digits")
-    .regex(/^[0-9]+$/, "Phone must contain only numbers"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string(),
-  agreeNotifications: z.boolean()
-    .refine(val => val === true, "You must agree to receive notifications"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+auth: {
+  // ... chaves existentes ...
+  companyName: "Nome da Empresa",
+  phoneNumber: "Número de Telefone",
+  confirmPassword: "Confirmar Senha",
+  agreeNotifications: "Eu concordo em receber notificações por email e telefone (como quando eu ganho uma comissão) e outras notificações importantes sobre o programa de afiliados.",
+  viewAffiliatePortal: "Ver Portal de Afiliados",
+  changePassword: "Alterar Senha",
+  setNewPasswordDescription: "Por favor, defina uma nova senha para continuar",
+  passwordChangeRequired: "Sua conta requer uma alteração de senha antes de continuar.",
+  newPassword: "Nova Senha",
+  confirmNewPassword: "Confirmar Nova Senha",
+  updatePassword: "Atualizar Senha",
+  companyNameRequired: "Nome da empresa é obrigatório",
+  phoneMinDigits: "Telefone deve ter pelo menos 10 dígitos",
+  phoneMaxDigits: "Telefone deve ter no máximo 15 dígitos",
+  phoneOnlyNumbers: "Telefone deve conter apenas números",
+  passwordsDontMatch: "As senhas não coincidem",
+  mustAgreeNotifications: "Você deve concordar em receber notificações",
+  passwordMinChars: "A senha deve ter pelo menos 8 caracteres",
+}
 ```
 
-**Novos campos no formulário:**
-- Campo Company Name com ícone Building
-- Campo Phone Number com ícone Phone
-- Checkbox com texto de consentimento
-- Link externo "Ver portal de Afiliados"
-
-**Imports adicionais:**
+**Espanhol (ES):**
 ```typescript
-import { Building, Phone } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+auth: {
+  // ... chaves existentes ...
+  companyName: "Nombre de la Empresa",
+  phoneNumber: "Número de Teléfono",
+  confirmPassword: "Confirmar Contraseña",
+  agreeNotifications: "Acepto recibir notificaciones por correo electrónico y teléfono (como cuando gano una comisión) y otras notificaciones importantes sobre el programa de afiliados.",
+  viewAffiliatePortal: "Ver Portal de Afiliados",
+  changePassword: "Cambiar Contraseña",
+  setNewPasswordDescription: "Por favor, establezca una nueva contraseña para continuar",
+  passwordChangeRequired: "Su cuenta requiere un cambio de contraseña antes de continuar.",
+  newPassword: "Nueva Contraseña",
+  confirmNewPassword: "Confirmar Nueva Contraseña",
+  updatePassword: "Actualizar Contraseña",
+  companyNameRequired: "El nombre de la empresa es obligatorio",
+  phoneMinDigits: "El teléfono debe tener al menos 10 dígitos",
+  phoneMaxDigits: "El teléfono debe tener como máximo 15 dígitos",
+  phoneOnlyNumbers: "El teléfono debe contener solo números",
+  passwordsDontMatch: "Las contraseñas no coinciden",
+  mustAgreeNotifications: "Debe aceptar recibir notificaciones",
+  passwordMinChars: "La contraseña debe tener al menos 8 caracteres",
+}
 ```
 
-### 2. Arquivo: `src/hooks/useAuth.tsx`
+### 2. Arquivo: `src/pages/Auth.tsx`
 
-**Atualização da função signUp:**
-```typescript
-const signUp = async (
-  email: string, 
-  password: string, 
-  fullName: string,
-  companyName: string,  // NOVO
-  phone: string         // NOVO
-) => {
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: redirectUrl,
-      data: {
-        full_name: fullName,
-        company_name: companyName,  // NOVO
-        phone: phone,               // NOVO
-      },
-    },
-  });
-  return { error };
-};
-```
+Substituir todos os textos hardcoded pelas chaves de tradução:
 
-### 3. Migração SQL: Atualizar trigger `handle_new_user`
+**Labels do formulário:**
+- `"Company Name"` → `{t.auth.companyName}`
+- `"Phone Number"` → `{t.auth.phoneNumber}`
+- `"Confirm Password"` → `{t.auth.confirmPassword}`
+- `"I agree to receive..."` → `{t.auth.agreeNotifications}`
+- `"Ver portal de Afiliados"` → `{t.auth.viewAffiliatePortal}`
 
-O trigger precisa ser atualizado para capturar os novos campos do metadata:
+**Tela de mudança de senha:**
+- `"Change Password"` → `{t.auth.changePassword}`
+- `"Please set a new password..."` → `{t.auth.setNewPasswordDescription}`
+- `"Your account requires..."` → `{t.auth.passwordChangeRequired}`
+- `"New Password"` → `{t.auth.newPassword}`
+- `"Confirm New Password"` → `{t.auth.confirmNewPassword}`
+- `"Update Password"` → `{t.auth.updatePassword}`
 
-```sql
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = ''
-AS $$
-BEGIN
-    INSERT INTO public.profiles (user_id, full_name, company_name, phone, affiliate_code)
-    VALUES (
-        NEW.id,
-        COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
-        NEW.raw_user_meta_data->>'company_name',
-        NEW.raw_user_meta_data->>'phone',
-        'ref_' || substring(NEW.id::text, 1, 8)
-    );
-    RETURN NEW;
-END;
-$$;
-```
+**Mensagens de validação no schema:**
+- Usar `t.auth.companyNameRequired`, `t.auth.phoneMinDigits`, etc.
 
 ---
 
 ## Detalhes Técnicos
 
-### Validação de Dados
-| Campo | Validação |
-|-------|-----------|
-| Full Name | Mínimo 2 caracteres |
-| Email | Formato de email válido |
-| Company Name | Mínimo 2 caracteres |
-| Phone Number | 10-15 dígitos, apenas números |
-| Password | Mínimo 6 caracteres |
-| Confirm Password | Deve ser igual ao Password |
-| Checkbox | Deve estar marcado (true) |
-
 ### Arquivos Modificados
-1. `src/pages/Auth.tsx` - Formulário de cadastro
-2. `src/hooks/useAuth.tsx` - Função signUp com novos parâmetros
-3. Migração SQL - Atualizar trigger handle_new_user
+1. `src/i18n/translations.ts` - Adicionar 17 novas chaves em cada idioma (51 traduções no total)
+2. `src/pages/Auth.tsx` - Substituir textos hardcoded por referências ao sistema i18n
 
-### Dependências Utilizadas
-- `Checkbox` de `@/components/ui/checkbox` (já existe)
-- Ícones `Building` e `Phone` de `lucide-react`
-
-### Link Externo
-O link "Ver portal de Afiliados" abrirá em nova aba:
-- URL: https://snapleads.com.br/joinaffiliate
-- Atributos: `target="_blank" rel="noopener noreferrer"`
+### Impacto
+- Formulário de cadastro exibirá textos no idioma selecionado
+- Tela de mudança de senha também será traduzida
+- Mensagens de validação aparecerão no idioma correto
+- Link "Ver Portal de Afiliados" será traduzido conforme idioma
