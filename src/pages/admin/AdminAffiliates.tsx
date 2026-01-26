@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminAffiliates } from "@/hooks/useAdminAffiliates";
+import { useAdminTiers } from "@/hooks/useAdminTiers";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,9 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Search, MoreHorizontal, UserCheck, UserX, Eye, Edit, RefreshCw } from "lucide-react";
+import { AffiliateFormDialog } from "@/components/admin/AffiliateFormDialog";
+import { ResetPasswordDialog } from "@/components/admin/ResetPasswordDialog";
+import { Users, Search, MoreHorizontal, UserCheck, UserX, Eye, Edit, RefreshCw, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { AffiliateWithStats } from "@/hooks/useAdminAffiliates";
 
 const TIER_COLORS: Record<string, string> = {
   silver: "bg-gray-100 text-gray-700 border-gray-200",
@@ -44,10 +48,17 @@ const TIER_COLORS: Record<string, string> = {
 
 const AdminAffiliates = () => {
   const { t } = useLanguage();
-  const { affiliates, isLoading, toggleActiveStatus, isUpdating } = useAdminAffiliates();
+  const { affiliates, isLoading, toggleActiveStatus, updateAffiliate, isUpdating } = useAdminAffiliates();
+  const { tiers } = useAdminTiers();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [tierFilter, setTierFilter] = useState<string>("all");
+  
+  // Dialog states
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedAffiliate, setSelectedAffiliate] = useState<AffiliateWithStats | null>(null);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [affiliateForPasswordReset, setAffiliateForPasswordReset] = useState<AffiliateWithStats | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -74,13 +85,35 @@ const AdminAffiliates = () => {
 
   const uniqueTiers = [...new Set(affiliates.map((a) => a.tier_level))];
 
+  const handleEditClick = (affiliate: AffiliateWithStats) => {
+    setSelectedAffiliate(affiliate);
+    setEditDialogOpen(true);
+  };
+
+  const handleResetPasswordClick = (affiliate: AffiliateWithStats) => {
+    setAffiliateForPasswordReset(affiliate);
+    setResetPasswordDialogOpen(true);
+  };
+
+  const handleUpdateAffiliate = (userId: string, updates: any) => {
+    updateAffiliate({ userId, updates });
+  };
+
+  const tiersForForm = tiers.map((tier) => ({
+    id: tier.id,
+    name: tier.name,
+    display_name: tier.display_name,
+  }));
+
   return (
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold">{t.admin.users}</h1>
-          <p className="text-muted-foreground">{t.admin.usersSubtitle}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">{t.admin.users}</h1>
+            <p className="text-muted-foreground">{t.admin.usersSubtitle}</p>
+          </div>
         </div>
 
         {/* Filters */}
@@ -198,11 +231,7 @@ const AdminAffiliates = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  {t.admin.viewDetails}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditClick(affiliate)}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   {t.admin.editUser}
                                 </DropdownMenuItem>
@@ -222,7 +251,7 @@ const AdminAffiliates = () => {
                                     </>
                                   )}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleResetPasswordClick(affiliate)}>
                                   <RefreshCw className="mr-2 h-4 w-4" />
                                   {t.admin.resetPassword}
                                 </DropdownMenuItem>
@@ -238,6 +267,27 @@ const AdminAffiliates = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit Affiliate Dialog */}
+        <AffiliateFormDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          affiliate={selectedAffiliate}
+          tiers={tiersForForm}
+          onSubmit={handleUpdateAffiliate}
+          isSubmitting={isUpdating}
+        />
+
+        {/* Reset Password Dialog */}
+        {affiliateForPasswordReset && (
+          <ResetPasswordDialog
+            open={resetPasswordDialogOpen}
+            onOpenChange={setResetPasswordDialogOpen}
+            affiliateName={affiliateForPasswordReset.full_name || ""}
+            affiliateEmail={affiliateForPasswordReset.email || ""}
+            userId={affiliateForPasswordReset.user_id}
+          />
+        )}
       </div>
     </AdminLayout>
   );

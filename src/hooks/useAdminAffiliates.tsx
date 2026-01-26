@@ -8,7 +8,7 @@ export interface AffiliateWithStats {
   user_id: string;
   full_name: string | null;
   company_name: string | null;
-  email?: string;
+  email: string;
   tier_level: string;
   is_active: boolean;
   phone: string | null;
@@ -68,6 +68,7 @@ export const useAdminAffiliates = () => {
         user_id: profile.user_id,
         full_name: profile.full_name,
         company_name: profile.company_name,
+        email: "", // Email will be fetched separately if needed
         tier_level: profile.tier_level,
         is_active: profile.is_active,
         phone: profile.phone,

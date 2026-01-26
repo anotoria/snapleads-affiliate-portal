@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminRoles } from "@/hooks/useAdminRoles";
 import { useAdminAffiliates } from "@/hooks/useAdminAffiliates";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,56 +17,83 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Shield, Plus, Trash2, Crown } from "lucide-react";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AdminFormDialog } from "@/components/admin/AdminFormDialog";
+import { Shield, Plus, Trash2, Crown, Edit, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const AdminAdmins = () => {
   const { t } = useLanguage();
+  const { isSuperAdmin } = useAdminAccess();
   const { admins, isLoading, addAdmin, removeAdmin, updateRole, isAdding, isRemoving, isUpdating } = useAdminRoles();
   const { affiliates } = useAdminAffiliates();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [selectedRole, setSelectedRole] = useState<"admin" | "super_admin">("admin");
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+  const [editData, setEditData] = useState<{
+    roleId: string;
+    userId: string;
+    role: "admin" | "super_admin";
+  } | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [adminToDelete, setAdminToDelete] = useState<string | null>(null);
 
   // Get affiliates that are not already admins
   const availableAffiliates = affiliates.filter(
     (affiliate) => !admins.some((admin) => admin.user_id === affiliate.user_id)
   );
 
-  const handleAddAdmin = () => {
-    if (selectedUserId) {
-      addAdmin({ userId: selectedUserId, role: selectedRole });
-      setIsDialogOpen(false);
-      setSelectedUserId("");
-      setSelectedRole("admin");
+  const handleAddClick = () => {
+    setDialogMode("add");
+    setEditData(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditClick = (admin: typeof admins[0]) => {
+    setDialogMode("edit");
+    setEditData({
+      roleId: admin.id,
+      userId: admin.user_id,
+      role: admin.role,
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteClick = (roleId: string) => {
+    setAdminToDelete(roleId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (adminToDelete) {
+      removeAdmin(adminToDelete);
+      setDeleteConfirmOpen(false);
+      setAdminToDelete(null);
     }
   };
 
-  const handleRemoveAdmin = (roleId: string) => {
-    if (confirm("Tem certeza que deseja remover este administrador?")) {
-      removeAdmin(roleId);
-    }
-  };
-
-  const handlePromoteToSuperAdmin = (roleId: string) => {
-    if (confirm("Deseja promover este usuário a Super Admin?")) {
-      updateRole({ roleId, newRole: "super_admin" });
-    }
-  };
+  if (!isSuperAdmin) {
+    return (
+      <AdminLayout>
+        <div className="flex flex-col items-center justify-center py-20">
+          <AlertTriangle className="h-16 w-16 text-destructive mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Acesso Restrito</h1>
+          <p className="text-muted-foreground">
+            Apenas Super Administradores podem acessar esta página.
+          </p>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -76,7 +104,7 @@ const AdminAdmins = () => {
             <h1 className="text-2xl font-bold">{t.admin.admins}</h1>
             <p className="text-muted-foreground">{t.admin.adminsSubtitle}</p>
           </div>
-          <Button onClick={() => setIsDialogOpen(true)}>
+          <Button onClick={handleAddClick}>
             <Plus className="mr-2 h-4 w-4" />
             {t.admin.addAdmin}
           </Button>
@@ -141,21 +169,18 @@ const AdminAdmins = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              {admin.role === "admin" && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handlePromoteToSuperAdmin(admin.id)}
-                                  disabled={isUpdating}
-                                >
-                                  <Crown className="mr-2 h-4 w-4" />
-                                  {t.admin.promoteToSuperAdmin}
-                                </Button>
-                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleRemoveAdmin(admin.id)}
+                                onClick={() => handleEditClick(admin)}
+                                disabled={isUpdating}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClick(admin.id)}
                                 disabled={isRemoving}
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -172,51 +197,35 @@ const AdminAdmins = () => {
           </CardContent>
         </Card>
 
-        {/* Add Admin Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t.admin.addAdmin}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Selecione o Afiliado</label>
-                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Escolha um afiliado..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableAffiliates.map((affiliate) => (
-                      <SelectItem key={affiliate.user_id} value={affiliate.user_id}>
-                        {affiliate.full_name || affiliate.company_name || "Sem nome"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t.admin.role}</label>
-                <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as typeof selectedRole)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">{t.admin.adminRole}</SelectItem>
-                    <SelectItem value="super_admin">{t.admin.superAdmin}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                {t.common.cancel}
-              </Button>
-              <Button onClick={handleAddAdmin} disabled={!selectedUserId || isAdding}>
-                {t.common.add}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Add/Edit Admin Dialog */}
+        <AdminFormDialog
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          availableAffiliates={availableAffiliates}
+          onSubmit={addAdmin}
+          isSubmitting={isAdding || isUpdating}
+          mode={dialogMode}
+          editData={editData}
+          onUpdateRole={updateRole}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t.admin.confirmAction}</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja remover este administrador? Esta ação pode ser desfeita posteriormente.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {t.admin.removeAdmin}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
