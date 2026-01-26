@@ -18,6 +18,27 @@ type AuthTranslations = {
   resetPasswordDescription: string;
   sendResetLink: string;
   cancel: string;
+  // New sign-up fields
+  companyName: string;
+  phoneNumber: string;
+  confirmPassword: string;
+  agreeNotifications: string;
+  viewAffiliatePortal: string;
+  // Change password screen
+  changePassword: string;
+  setNewPasswordDescription: string;
+  passwordChangeRequired: string;
+  newPassword: string;
+  confirmNewPassword: string;
+  updatePassword: string;
+  // Validation messages
+  companyNameRequired: string;
+  phoneMinDigits: string;
+  phoneMaxDigits: string;
+  phoneOnlyNumbers: string;
+  passwordsDontMatch: string;
+  mustAgreeNotifications: string;
+  passwordMinChars: string;
 };
 
 type DashboardTranslations = {
@@ -408,6 +429,27 @@ export const translations = {
       resetPasswordDescription: "Enter your email and we'll send you a reset link",
       sendResetLink: "Send Reset Link",
       cancel: "Cancel",
+      // New sign-up fields
+      companyName: "Company Name",
+      phoneNumber: "Phone Number",
+      confirmPassword: "Confirm Password",
+      agreeNotifications: "I agree to receive email and phone notifications (like when I earn a commission) and other important notifications regarding the affiliate program.",
+      viewAffiliatePortal: "View Affiliate Portal",
+      // Change password screen
+      changePassword: "Change Password",
+      setNewPasswordDescription: "Please set a new password to continue",
+      passwordChangeRequired: "Your account requires a password change before you can continue.",
+      newPassword: "New Password",
+      confirmNewPassword: "Confirm New Password",
+      updatePassword: "Update Password",
+      // Validation messages
+      companyNameRequired: "Company name is required",
+      phoneMinDigits: "Phone must have at least 10 digits",
+      phoneMaxDigits: "Phone must have at most 15 digits",
+      phoneOnlyNumbers: "Phone must contain only numbers",
+      passwordsDontMatch: "Passwords don't match",
+      mustAgreeNotifications: "You must agree to receive notifications",
+      passwordMinChars: "Password must be at least 8 characters",
     },
 
     dashboard: {
@@ -758,6 +800,27 @@ export const translations = {
       resetPasswordDescription: "Digite seu email e enviaremos um link de redefinição",
       sendResetLink: "Enviar Link",
       cancel: "Cancelar",
+      // New sign-up fields
+      companyName: "Nome da Empresa",
+      phoneNumber: "Número de Telefone",
+      confirmPassword: "Confirmar Senha",
+      agreeNotifications: "Eu concordo em receber notificações por email e telefone (como quando eu ganho uma comissão) e outras notificações importantes sobre o programa de afiliados.",
+      viewAffiliatePortal: "Ver Portal de Afiliados",
+      // Change password screen
+      changePassword: "Alterar Senha",
+      setNewPasswordDescription: "Por favor, defina uma nova senha para continuar",
+      passwordChangeRequired: "Sua conta requer uma alteração de senha antes de continuar.",
+      newPassword: "Nova Senha",
+      confirmNewPassword: "Confirmar Nova Senha",
+      updatePassword: "Atualizar Senha",
+      // Validation messages
+      companyNameRequired: "Nome da empresa é obrigatório",
+      phoneMinDigits: "Telefone deve ter pelo menos 10 dígitos",
+      phoneMaxDigits: "Telefone deve ter no máximo 15 dígitos",
+      phoneOnlyNumbers: "Telefone deve conter apenas números",
+      passwordsDontMatch: "As senhas não coincidem",
+      mustAgreeNotifications: "Você deve concordar em receber notificações",
+      passwordMinChars: "A senha deve ter pelo menos 8 caracteres",
     },
 
     dashboard: {
@@ -1108,6 +1171,27 @@ export const translations = {
       resetPasswordDescription: "Ingresa tu correo y te enviaremos un enlace de restablecimiento",
       sendResetLink: "Enviar Enlace",
       cancel: "Cancelar",
+      // New sign-up fields
+      companyName: "Nombre de la Empresa",
+      phoneNumber: "Número de Teléfono",
+      confirmPassword: "Confirmar Contraseña",
+      agreeNotifications: "Acepto recibir notificaciones por correo electrónico y teléfono (como cuando gano una comisión) y otras notificaciones importantes sobre el programa de afiliados.",
+      viewAffiliatePortal: "Ver Portal de Afiliados",
+      // Change password screen
+      changePassword: "Cambiar Contraseña",
+      setNewPasswordDescription: "Por favor, establezca una nueva contraseña para continuar",
+      passwordChangeRequired: "Su cuenta requiere un cambio de contraseña antes de continuar.",
+      newPassword: "Nueva Contraseña",
+      confirmNewPassword: "Confirmar Nueva Contraseña",
+      updatePassword: "Actualizar Contraseña",
+      // Validation messages
+      companyNameRequired: "El nombre de la empresa es obligatorio",
+      phoneMinDigits: "El teléfono debe tener al menos 10 dígitos",
+      phoneMaxDigits: "El teléfono debe tener como máximo 15 dígitos",
+      phoneOnlyNumbers: "El teléfono debe contener solo números",
+      passwordsDontMatch: "Las contraseñas no coinciden",
+      mustAgreeNotifications: "Debe aceptar recibir notificaciones",
+      passwordMinChars: "La contraseña debe tener al menos 8 caracteres",
     },
 
     dashboard: {
