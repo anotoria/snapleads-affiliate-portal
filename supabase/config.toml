@@ -2,3 +2,6 @@ project_id = "fgrgyblddyiswdsbjrcl"
 
 [functions.n8n-webhook]
 verify_jwt = false
+
+[functions.admin-reset-password]
+verify_jwt = false

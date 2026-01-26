@@ -1,7 +1,8 @@
-import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminMetricCard } from "@/components/admin/AdminMetricCard";
+import { AdminEvolutionCharts } from "@/components/admin/AdminEvolutionCharts";
 import { useAdminDashboardMetrics } from "@/hooks/useAdminData";
+import { useAdminEvolutionData } from "@/hooks/useAdminEvolutionData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +21,7 @@ const TIER_COLORS: Record<string, string> = {
 const AdminDashboard = () => {
   const { t } = useLanguage();
   const { data: metrics, isLoading } = useAdminDashboardMetrics();
+  const { data: evolutionData, isLoading: isEvolutionLoading } = useAdminEvolutionData(6);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -123,6 +125,12 @@ const AdminDashboard = () => {
             </>
           )}
         </div>
+
+        {/* Evolution Charts */}
+        <AdminEvolutionCharts 
+          data={evolutionData || []} 
+          isLoading={isEvolutionLoading} 
+        />
 
         {/* Charts Row */}
         <div className="grid gap-6 lg:grid-cols-2">
