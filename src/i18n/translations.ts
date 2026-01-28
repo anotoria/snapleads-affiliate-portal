@@ -100,6 +100,7 @@ type NavTranslations = {
   reports: string;
   documents: string;
   support: string;
+  supportMaterials: string;
   admin: string;
   adminDashboard: string;
   adminUsers: string;
@@ -108,6 +109,8 @@ type NavTranslations = {
   adminSupport: string;
   adminAdmins: string;
   adminSACommissions: string;
+  adminTracks: string;
+  adminMedia: string;
 };
 
 type LeadsTranslations = {
@@ -347,6 +350,84 @@ type TiersTranslations = {
   audaks: string;
 };
 
+type SupportMaterialsTranslations = {
+  title: string;
+  subtitle: string;
+  tracks: string;
+  media: string;
+  photos: string;
+  videos: string;
+  files: string;
+  // Tracks
+  allTracks: string;
+  featuredTracks: string;
+  startTrack: string;
+  continueTrack: string;
+  completedTrack: string;
+  progress: string;
+  modules: string;
+  contents: string;
+  duration: string;
+  markAsComplete: string;
+  nextContent: string;
+  previousContent: string;
+  noTracks: string;
+  noTracksDescription: string;
+  videoContent: string;
+  textContent: string;
+  minutes: string;
+  // Media
+  mediaLibrary: string;
+  downloadSelected: string;
+  downloadAll: string;
+  selectAll: string;
+  clearSelection: string;
+  noMediaFound: string;
+  noMediaDescription: string;
+  zoomIn: string;
+  zoomOut: string;
+  download: string;
+  categories: string;
+  noCategories: string;
+  noCategoriesDescription: string;
+  itemsCount: string;
+  // Admin
+  manageTracks: string;
+  manageTracksSubtitle: string;
+  addTrack: string;
+  editTrack: string;
+  manageModules: string;
+  manageModulesSubtitle: string;
+  addModule: string;
+  editModule: string;
+  manageContents: string;
+  manageContentsSubtitle: string;
+  addContent: string;
+  editContent: string;
+  contentType: string;
+  videoUrl: string;
+  textEditor: string;
+  durationMinutes: string;
+  featured: string;
+  manageMediaCategories: string;
+  manageMediaCategoriesSubtitle: string;
+  addCategory: string;
+  editCategory: string;
+  categoryType: string;
+  manageMediaItems: string;
+  manageMediaItemsSubtitle: string;
+  uploadMedia: string;
+  bulkUpload: string;
+  fileType: string;
+  fileSize: string;
+  downloadCount: string;
+  coverUrl: string;
+  thumbnailUrl: string;
+  sortOrder: string;
+  isActive: string;
+  isFeatured: string;
+};
+
 type CommonTranslations = {
   affiliatePortal: string;
   adminMode: string;
@@ -385,6 +466,7 @@ export type TranslationKeys = {
   support: SupportTranslations;
   admin: AdminTranslations;
   tiers: TiersTranslations;
+  supportMaterials: SupportMaterialsTranslations;
 };
 
 export const translations = {
@@ -512,6 +594,7 @@ export const translations = {
       reports: "Reports",
       documents: "Documents",
       support: "Support",
+      supportMaterials: "Support Materials",
       admin: "Admin",
       adminDashboard: "Admin Dashboard",
       adminUsers: "Affiliates",
@@ -520,6 +603,8 @@ export const translations = {
       adminSupport: "Support",
       adminAdmins: "Administrators",
       adminSACommissions: "SA Commissions",
+      adminTracks: "Tracks",
+      adminMedia: "Media",
     },
 
     leads: {
@@ -758,6 +843,84 @@ export const translations = {
       titanium: "Titanium",
       audaks: "Audaks",
     },
+
+    supportMaterials: {
+      title: "Support Materials",
+      subtitle: "Learn and access exclusive resources to boost your results",
+      tracks: "Learning Tracks",
+      media: "Media",
+      photos: "Photos",
+      videos: "Videos",
+      files: "Files",
+      // Tracks
+      allTracks: "All Tracks",
+      featuredTracks: "Featured Tracks",
+      startTrack: "Start Track",
+      continueTrack: "Continue Track",
+      completedTrack: "Completed Track",
+      progress: "Progress",
+      modules: "Modules",
+      contents: "Contents",
+      duration: "Duration",
+      markAsComplete: "Mark as complete",
+      nextContent: "Next Content",
+      previousContent: "Previous Content",
+      noTracks: "No tracks available",
+      noTracksDescription: "Learning tracks will be available soon.",
+      videoContent: "Video Content",
+      textContent: "Text Content",
+      minutes: "min",
+      // Media
+      mediaLibrary: "Media Library",
+      downloadSelected: "Download Selected",
+      downloadAll: "Download All",
+      selectAll: "Select All",
+      clearSelection: "Clear Selection",
+      noMediaFound: "No media found",
+      noMediaDescription: "No media items available in this category.",
+      zoomIn: "Zoom In",
+      zoomOut: "Zoom Out",
+      download: "Download",
+      categories: "Categories",
+      noCategories: "No categories available",
+      noCategoriesDescription: "Media categories will be available soon.",
+      itemsCount: "items",
+      // Admin
+      manageTracks: "Manage Tracks",
+      manageTracksSubtitle: "Create and manage learning tracks",
+      addTrack: "New Track",
+      editTrack: "Edit Track",
+      manageModules: "Manage Modules",
+      manageModulesSubtitle: "Organize track modules",
+      addModule: "New Module",
+      editModule: "Edit Module",
+      manageContents: "Manage Contents",
+      manageContentsSubtitle: "Create and manage module contents",
+      addContent: "New Content",
+      editContent: "Edit Content",
+      contentType: "Content Type",
+      videoUrl: "Video URL",
+      textEditor: "Text Editor",
+      durationMinutes: "Duration (minutes)",
+      featured: "Featured",
+      manageMediaCategories: "Media Categories",
+      manageMediaCategoriesSubtitle: "Organize your media by category",
+      addCategory: "New Category",
+      editCategory: "Edit Category",
+      categoryType: "Category Type",
+      manageMediaItems: "Media Items",
+      manageMediaItemsSubtitle: "Manage media files",
+      uploadMedia: "Upload Media",
+      bulkUpload: "Bulk Upload",
+      fileType: "File Type",
+      fileSize: "File Size",
+      downloadCount: "Download Count",
+      coverUrl: "Cover URL",
+      thumbnailUrl: "Thumbnail URL",
+      sortOrder: "Sort Order",
+      isActive: "Active",
+      isFeatured: "Featured",
+    },
   },
 
   pt: {
@@ -884,6 +1047,7 @@ export const translations = {
       reports: "Relatórios",
       documents: "Documentos",
       support: "Suporte",
+      supportMaterials: "Materiais de Apoio",
       admin: "Admin",
       adminDashboard: "Painel Admin",
       adminUsers: "Afiliados",
@@ -892,6 +1056,8 @@ export const translations = {
       adminSupport: "Suporte",
       adminAdmins: "Administradores",
       adminSACommissions: "Comissões SA",
+      adminTracks: "Trilhas",
+      adminMedia: "Mídias",
     },
 
     leads: {
@@ -1130,6 +1296,84 @@ export const translations = {
       titanium: "Titânio",
       audaks: "Audaks",
     },
+
+    supportMaterials: {
+      title: "Materiais de Apoio",
+      subtitle: "Aprenda e tenha acesso a recursos exclusivos para impulsionar seus resultados",
+      tracks: "Trilhas de Aprendizado",
+      media: "Mídias",
+      photos: "Fotos",
+      videos: "Vídeos",
+      files: "Arquivos",
+      // Tracks
+      allTracks: "Todas as Trilhas",
+      featuredTracks: "Trilhas em Destaque",
+      startTrack: "Iniciar Trilha",
+      continueTrack: "Continuar Trilha",
+      completedTrack: "Trilha Concluída",
+      progress: "Progresso",
+      modules: "Módulos",
+      contents: "Conteúdos",
+      duration: "Duração",
+      markAsComplete: "Marcar como concluído",
+      nextContent: "Próximo Conteúdo",
+      previousContent: "Conteúdo Anterior",
+      noTracks: "Nenhuma trilha disponível",
+      noTracksDescription: "As trilhas de aprendizado estarão disponíveis em breve.",
+      videoContent: "Conteúdo em Vídeo",
+      textContent: "Conteúdo em Texto",
+      minutes: "min",
+      // Media
+      mediaLibrary: "Biblioteca de Mídias",
+      downloadSelected: "Baixar Selecionados",
+      downloadAll: "Baixar Todos",
+      selectAll: "Selecionar Todos",
+      clearSelection: "Limpar Seleção",
+      noMediaFound: "Nenhuma mídia encontrada",
+      noMediaDescription: "Nenhum item de mídia disponível nesta categoria.",
+      zoomIn: "Ampliar",
+      zoomOut: "Reduzir",
+      download: "Baixar",
+      categories: "Categorias",
+      noCategories: "Nenhuma categoria disponível",
+      noCategoriesDescription: "As categorias de mídia estarão disponíveis em breve.",
+      itemsCount: "itens",
+      // Admin
+      manageTracks: "Gerenciar Trilhas",
+      manageTracksSubtitle: "Crie e gerencie trilhas de aprendizado",
+      addTrack: "Nova Trilha",
+      editTrack: "Editar Trilha",
+      manageModules: "Gerenciar Módulos",
+      manageModulesSubtitle: "Organize os módulos da trilha",
+      addModule: "Novo Módulo",
+      editModule: "Editar Módulo",
+      manageContents: "Gerenciar Conteúdos",
+      manageContentsSubtitle: "Crie e gerencie conteúdos dos módulos",
+      addContent: "Novo Conteúdo",
+      editContent: "Editar Conteúdo",
+      contentType: "Tipo de Conteúdo",
+      videoUrl: "URL do Vídeo",
+      textEditor: "Editor de Texto",
+      durationMinutes: "Duração (minutos)",
+      featured: "Destaque",
+      manageMediaCategories: "Categorias de Mídia",
+      manageMediaCategoriesSubtitle: "Organize suas mídias por categoria",
+      addCategory: "Nova Categoria",
+      editCategory: "Editar Categoria",
+      categoryType: "Tipo de Categoria",
+      manageMediaItems: "Itens de Mídia",
+      manageMediaItemsSubtitle: "Gerencie arquivos de mídia",
+      uploadMedia: "Fazer Upload",
+      bulkUpload: "Upload em Lote",
+      fileType: "Tipo de Arquivo",
+      fileSize: "Tamanho do Arquivo",
+      downloadCount: "Downloads",
+      coverUrl: "URL da Capa",
+      thumbnailUrl: "URL da Miniatura",
+      sortOrder: "Ordem",
+      isActive: "Ativo",
+      isFeatured: "Destaque",
+    },
   },
 
   es: {
@@ -1256,6 +1500,7 @@ export const translations = {
       reports: "Reportes",
       documents: "Documentos",
       support: "Soporte",
+      supportMaterials: "Materiales de Apoyo",
       admin: "Admin",
       adminDashboard: "Panel Admin",
       adminUsers: "Afiliados",
@@ -1264,6 +1509,8 @@ export const translations = {
       adminSupport: "Soporte",
       adminAdmins: "Administradores",
       adminSACommissions: "Comisiones SA",
+      adminTracks: "Tracks",
+      adminMedia: "Medios",
     },
 
     leads: {
@@ -1501,6 +1748,84 @@ export const translations = {
       diamond: "Diamante",
       titanium: "Titanio",
       audaks: "Audaks",
+    },
+
+    supportMaterials: {
+      title: "Materiales de Apoyo",
+      subtitle: "Aprende y accede a recursos exclusivos para impulsar tus resultados",
+      tracks: "Rutas de Aprendizaje",
+      media: "Medios",
+      photos: "Fotos",
+      videos: "Videos",
+      files: "Archivos",
+      // Tracks
+      allTracks: "Todas las Rutas",
+      featuredTracks: "Rutas Destacadas",
+      startTrack: "Iniciar Ruta",
+      continueTrack: "Continuar Ruta",
+      completedTrack: "Ruta Completada",
+      progress: "Progreso",
+      modules: "Módulos",
+      contents: "Contenidos",
+      duration: "Duración",
+      markAsComplete: "Marcar como completado",
+      nextContent: "Siguiente Contenido",
+      previousContent: "Contenido Anterior",
+      noTracks: "Sin rutas disponibles",
+      noTracksDescription: "Las rutas de aprendizaje estarán disponibles pronto.",
+      videoContent: "Contenido en Video",
+      textContent: "Contenido en Texto",
+      minutes: "min",
+      // Media
+      mediaLibrary: "Biblioteca de Medios",
+      downloadSelected: "Descargar Seleccionados",
+      downloadAll: "Descargar Todos",
+      selectAll: "Seleccionar Todos",
+      clearSelection: "Limpiar Selección",
+      noMediaFound: "Sin medios encontrados",
+      noMediaDescription: "No hay elementos de media disponibles en esta categoría.",
+      zoomIn: "Ampliar",
+      zoomOut: "Reducir",
+      download: "Descargar",
+      categories: "Categorías",
+      noCategories: "Sin categorías disponibles",
+      noCategoriesDescription: "Las categorías de medios estarán disponibles pronto.",
+      itemsCount: "elementos",
+      // Admin
+      manageTracks: "Gestionar Rutas",
+      manageTracksSubtitle: "Crea y gestiona rutas de aprendizaje",
+      addTrack: "Nueva Ruta",
+      editTrack: "Editar Ruta",
+      manageModules: "Gestionar Módulos",
+      manageModulesSubtitle: "Organiza los módulos de la ruta",
+      addModule: "Nuevo Módulo",
+      editModule: "Editar Módulo",
+      manageContents: "Gestionar Contenidos",
+      manageContentsSubtitle: "Crea y gestiona contenidos de los módulos",
+      addContent: "Nuevo Contenido",
+      editContent: "Editar Contenido",
+      contentType: "Tipo de Contenido",
+      videoUrl: "URL del Video",
+      textEditor: "Editor de Texto",
+      durationMinutes: "Duración (minutos)",
+      featured: "Destacado",
+      manageMediaCategories: "Categorías de Medios",
+      manageMediaCategoriesSubtitle: "Organiza tus medios por categoría",
+      addCategory: "Nueva Categoría",
+      editCategory: "Editar Categoría",
+      categoryType: "Tipo de Categoría",
+      manageMediaItems: "Elementos de Medios",
+      manageMediaItemsSubtitle: "Gestiona archivos de medios",
+      uploadMedia: "Subir Medio",
+      bulkUpload: "Subida Masiva",
+      fileType: "Tipo de Archivo",
+      fileSize: "Tamaño del Archivo",
+      downloadCount: "Descargas",
+      coverUrl: "URL de Portada",
+      thumbnailUrl: "URL de Miniatura",
+      sortOrder: "Orden",
+      isActive: "Activo",
+      isFeatured: "Destacado",
     },
   },
 } satisfies Record<Language, TranslationKeys>;

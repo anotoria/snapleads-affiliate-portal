@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, GraduationCap } from "lucide-react";
 import { useTracks } from "@/hooks/useTracks";
 import { TrackCard } from "@/components/learning/TrackCard";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Tracks = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { data: tracks, isLoading } = useTracks();
 
   return (
@@ -23,9 +25,9 @@ const Tracks = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Trilhas de Aprendizado</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t.supportMaterials.tracks}</h1>
             <p className="mt-1 text-muted-foreground">
-              Cursos completos para impulsionar seus resultados
+              {t.supportMaterials.subtitle}
             </p>
           </div>
         </div>
@@ -56,9 +58,9 @@ const Tracks = () => {
         ) : (
           <Card className="p-12 text-center">
             <GraduationCap className="mx-auto h-16 w-16 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-semibold">Nenhuma trilha disponível</h3>
+            <h3 className="mt-4 text-lg font-semibold">{t.supportMaterials.noTracks}</h3>
             <p className="mt-2 text-muted-foreground">
-              As trilhas de aprendizado estarão disponíveis em breve.
+              {t.supportMaterials.noTracksDescription}
             </p>
           </Card>
         )}

@@ -22,9 +22,9 @@ const SupportMaterials = () => {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Materiais de Apoio</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t.supportMaterials.title}</h1>
           <p className="mt-2 text-muted-foreground">
-            Aprenda e tenha acesso a recursos exclusivos para impulsionar seus resultados
+            {t.supportMaterials.subtitle}
           </p>
         </div>
 
@@ -39,9 +39,9 @@ const SupportMaterials = () => {
                 <GraduationCap className="h-8 w-8 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold">Trilhas de Aprendizado</h3>
+                <h3 className="text-lg font-semibold">{t.supportMaterials.tracks}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Cursos completos com vídeos e conteúdos exclusivos
+                  {t.supportMaterials.videoContent} & {t.supportMaterials.textContent}
                 </p>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -57,9 +57,9 @@ const SupportMaterials = () => {
                 <FolderOpen className="h-8 w-8 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold">Biblioteca de Mídias</h3>
+                <h3 className="text-lg font-semibold">{t.supportMaterials.mediaLibrary}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Fotos, vídeos e arquivos para download
+                  {t.supportMaterials.photos}, {t.supportMaterials.videos} & {t.supportMaterials.files}
                 </p>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -72,14 +72,14 @@ const SupportMaterials = () => {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Trilhas em Destaque</h2>
+              <h2 className="text-xl font-semibold">{t.supportMaterials.featuredTracks}</h2>
             </div>
             <Button 
               variant="ghost" 
               onClick={() => navigate("/materials/tracks")}
               className="text-primary"
             >
-              Ver todas
+              {t.supportMaterials.allTracks}
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
@@ -110,7 +110,7 @@ const SupportMaterials = () => {
             <Card className="p-8 text-center">
               <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground/50" />
               <p className="mt-4 text-muted-foreground">
-                Nenhuma trilha em destaque disponível no momento.
+                {t.supportMaterials.noTracksDescription}
               </p>
             </Card>
           )}
@@ -121,14 +121,14 @@ const SupportMaterials = () => {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FolderOpen className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Mídias por Categoria</h2>
+              <h2 className="text-xl font-semibold">{t.supportMaterials.categories}</h2>
             </div>
             <Button 
               variant="ghost" 
               onClick={() => navigate("/materials/media")}
               className="text-primary"
             >
-              Ver todas
+              {t.supportMaterials.mediaLibrary}
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
@@ -156,10 +156,10 @@ const SupportMaterials = () => {
                   <div className="mb-3 flex items-center gap-2">
                     <Badge variant="secondary" className="gap-1">
                       <Image className="h-3 w-3" />
-                      Fotos
+                      {t.supportMaterials.photos}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {categoriesGrouped.photo.length} categoria(s)
+                      {categoriesGrouped.photo.length} {t.supportMaterials.categories.toLowerCase()}
                     </span>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -180,10 +180,10 @@ const SupportMaterials = () => {
                   <div className="mb-3 flex items-center gap-2">
                     <Badge variant="secondary" className="gap-1 bg-red-500/10 text-red-500">
                       <Video className="h-3 w-3" />
-                      Vídeos
+                      {t.supportMaterials.videos}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {categoriesGrouped.video.length} categoria(s)
+                      {categoriesGrouped.video.length} {t.supportMaterials.categories.toLowerCase()}
                     </span>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -204,10 +204,10 @@ const SupportMaterials = () => {
                   <div className="mb-3 flex items-center gap-2">
                     <Badge variant="secondary" className="gap-1 bg-green-500/10 text-green-500">
                       <FileText className="h-3 w-3" />
-                      Arquivos
+                      {t.supportMaterials.files}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {categoriesGrouped.file.length} categoria(s)
+                      {categoriesGrouped.file.length} {t.supportMaterials.categories.toLowerCase()}
                     </span>
                   </div>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -229,7 +229,7 @@ const SupportMaterials = () => {
                 <Card className="p-8 text-center">
                   <FolderOpen className="mx-auto h-12 w-12 text-muted-foreground/50" />
                   <p className="mt-4 text-muted-foreground">
-                    Nenhuma categoria de mídia disponível no momento.
+                    {t.supportMaterials.noCategoriesDescription}
                   </p>
                 </Card>
               )}
