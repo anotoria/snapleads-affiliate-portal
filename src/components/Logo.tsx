@@ -28,7 +28,7 @@ export const Logo = ({ collapsed = false, className = "", size = "md", showSubti
         />
       </div>
       {showSubtitle && (
-        <span className={`text-xs text-muted-foreground mt-1 ${centered ? "text-center" : ""}`}>{t.common.affiliatePortal}</span>
+        <span className={`text-xs text-muted-foreground dark:text-[hsl(281,50%,6%)] font-semibold mt-1 ${centered ? "text-center" : ""}`}>{t.common.affiliatePortal}</span>
       )}
     </div>
   );
