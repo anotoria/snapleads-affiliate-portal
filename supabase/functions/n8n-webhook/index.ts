@@ -145,7 +145,7 @@ function logAudit(entry: AuditLogEntry): void {
 }
 
 // Types
-type TableName = "profiles" | "leads" | "payouts" | "users" | "user_roles" | "tiers" | "pricing_tiers" | "commission_history" | "documents" | "support_tickets" | "support_messages";
+type TableName = "profiles" | "leads" | "payouts" | "users" | "user_roles" | "tiers" | "pricing_tiers" | "commission_history" | "documents" | "support_tickets" | "support_messages" | "learning_tracks" | "learning_modules" | "learning_contents" | "media_categories" | "media_items";
 type ActionType = "insert" | "update" | "upsert" | "get" | "delete" | "calculate_tier" | "calculate_commission" | "deactivate_user" | "activate_user" | "reset_password" | "get_admin_summary";
 
 // Sensitive actions that require enhanced logging
@@ -194,7 +194,9 @@ const DEFAULT_TEMP_PASSWORD = "TempPass123!";
 const VALID_TABLES: TableName[] = [
   "profiles", "leads", "payouts", "users", "user_roles", 
   "tiers", "pricing_tiers", "commission_history", 
-  "documents", "support_tickets", "support_messages"
+  "documents", "support_tickets", "support_messages",
+  "learning_tracks", "learning_modules", "learning_contents",
+  "media_categories", "media_items"
 ];
 
 const VALID_ACTIONS: ActionType[] = [
@@ -578,6 +580,13 @@ interface GetFilters {
   created_before?: string;
   limit?: number;
   offset?: number;
+  // Support Materials filters
+  track_id?: string;
+  module_id?: string;
+  category_id?: string;
+  type?: string;
+  media_type?: string;
+  is_featured?: boolean;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -598,6 +607,15 @@ async function handleGetOperation(
   }
   if (filters?.reference_month && !isValidReferenceMonth(filters.reference_month)) {
     return { success: false, error: "Invalid reference_month format (must be YYYY-MM)" };
+  }
+  if (filters?.track_id && !isValidUUID(filters.track_id)) {
+    return { success: false, error: "Invalid track_id filter format" };
+  }
+  if (filters?.module_id && !isValidUUID(filters.module_id)) {
+    return { success: false, error: "Invalid module_id filter format" };
+  }
+  if (filters?.category_id && !isValidUUID(filters.category_id)) {
+    return { success: false, error: "Invalid category_id filter format" };
   }
 
   try {
@@ -846,6 +864,103 @@ async function handleGetOperation(
         return { success: true, result: { action: "get", table: "user_roles", data: roles, count: roles.length, filters: filters || {} } };
       }
 
+      // ==========================================
+      // Support Materials - Learning Tracks
+      // ==========================================
+      case "learning_tracks": {
+        let query = supabase
+          .from("learning_tracks")
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .range(offset, offset + limit - 1);
+
+        if (filters?.is_active !== undefined) query = query.eq("is_active", filters.is_active);
+        if (filters?.is_featured !== undefined) query = query.eq("is_featured", filters.is_featured);
+        if (filters?.created_after) query = query.gte("created_at", filters.created_after);
+        if (filters?.created_before) query = query.lte("created_at", filters.created_before);
+
+        const { data: tracks, error } = await query;
+        if (error) return { success: false, error: error.message };
+
+        return { success: true, result: { action: "get", table: "learning_tracks", data: tracks, count: tracks.length, filters: filters || {} } };
+      }
+
+      case "learning_modules": {
+        let query = supabase
+          .from("learning_modules")
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .range(offset, offset + limit - 1);
+
+        if (filters?.track_id) query = query.eq("track_id", filters.track_id);
+        if (filters?.is_active !== undefined) query = query.eq("is_active", filters.is_active);
+        if (filters?.created_after) query = query.gte("created_at", filters.created_after);
+        if (filters?.created_before) query = query.lte("created_at", filters.created_before);
+
+        const { data: modules, error } = await query;
+        if (error) return { success: false, error: error.message };
+
+        return { success: true, result: { action: "get", table: "learning_modules", data: modules, count: modules.length, filters: filters || {} } };
+      }
+
+      case "learning_contents": {
+        let query = supabase
+          .from("learning_contents")
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .range(offset, offset + limit - 1);
+
+        if (filters?.module_id) query = query.eq("module_id", filters.module_id);
+        if (filters?.is_active !== undefined) query = query.eq("is_active", filters.is_active);
+        if (filters?.created_after) query = query.gte("created_at", filters.created_after);
+        if (filters?.created_before) query = query.lte("created_at", filters.created_before);
+
+        const { data: contents, error } = await query;
+        if (error) return { success: false, error: error.message };
+
+        return { success: true, result: { action: "get", table: "learning_contents", data: contents, count: contents.length, filters: filters || {} } };
+      }
+
+      // ==========================================
+      // Support Materials - Media Library
+      // ==========================================
+      case "media_categories": {
+        let query = supabase
+          .from("media_categories")
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .range(offset, offset + limit - 1);
+
+        if (filters?.type) query = query.eq("type", filters.type);
+        if (filters?.is_active !== undefined) query = query.eq("is_active", filters.is_active);
+        if (filters?.created_after) query = query.gte("created_at", filters.created_after);
+        if (filters?.created_before) query = query.lte("created_at", filters.created_before);
+
+        const { data: categories, error } = await query;
+        if (error) return { success: false, error: error.message };
+
+        return { success: true, result: { action: "get", table: "media_categories", data: categories, count: categories.length, filters: filters || {} } };
+      }
+
+      case "media_items": {
+        let query = supabase
+          .from("media_items")
+          .select("*")
+          .order("sort_order", { ascending: true })
+          .range(offset, offset + limit - 1);
+
+        if (filters?.category_id) query = query.eq("category_id", filters.category_id);
+        if (filters?.media_type) query = query.eq("media_type", filters.media_type);
+        if (filters?.is_active !== undefined) query = query.eq("is_active", filters.is_active);
+        if (filters?.created_after) query = query.gte("created_at", filters.created_after);
+        if (filters?.created_before) query = query.lte("created_at", filters.created_before);
+
+        const { data: items, error } = await query;
+        if (error) return { success: false, error: error.message };
+
+        return { success: true, result: { action: "get", table: "media_items", data: items, count: items.length, filters: filters || {} } };
+      }
+
       default:
         return { success: false, error: "Unknown table for get operation" };
     }
@@ -876,7 +991,11 @@ async function handleDeleteOperation(
   }
 
   // Only allow delete on certain tables
-  const deletableTables: TableName[] = ["documents", "support_tickets", "support_messages", "user_roles"];
+  const deletableTables: TableName[] = [
+    "documents", "support_tickets", "support_messages", "user_roles",
+    "learning_tracks", "learning_modules", "learning_contents",
+    "media_categories", "media_items"
+  ];
   if (!deletableTables.includes(table)) {
     return { success: false, error: `Delete not allowed on table: ${table}. Allowed tables: ${deletableTables.join(", ")}` };
   }
@@ -1568,6 +1687,16 @@ function getConflictColumn(table: TableName): string {
       return "id";
     case "user_roles":
       return "id";
+    case "learning_tracks":
+      return "id";
+    case "learning_modules":
+      return "id";
+    case "learning_contents":
+      return "id";
+    case "media_categories":
+      return "name";
+    case "media_items":
+      return "id";
     default:
       return "id";
   }
@@ -1944,6 +2073,231 @@ function validateTableData(table: TableName, data: Record<string, unknown>): { d
         validated.message = sanitizeString(String(data.message), 5000);
       }
       if (data.is_admin_reply !== undefined) validated.is_admin_reply = Boolean(data.is_admin_reply);
+      if (data.id) {
+        if (!isValidUUID(String(data.id))) return { error: "Invalid id format (must be UUID)" };
+        validated.id = data.id;
+      }
+      
+      return { data: validated };
+    }
+
+    // ==========================================
+    // Support Materials - Learning Tracks
+    // ==========================================
+    case "learning_tracks": {
+      const validated: Record<string, unknown> = {};
+      
+      if (data.title !== undefined) {
+        if (!data.title || String(data.title).trim().length === 0) return { error: "title is required" };
+        validated.title = sanitizeString(String(data.title), 255);
+      }
+      if (data.description !== undefined) validated.description = data.description ? sanitizeString(String(data.description), 5000) : null;
+      if (data.cover_url !== undefined) {
+        if (data.cover_url && !isValidURL(String(data.cover_url))) {
+          return { error: "Invalid cover_url format (must be valid URL)" };
+        }
+        validated.cover_url = data.cover_url ? sanitizeString(String(data.cover_url), 1000) : null;
+      }
+      if (data.is_active !== undefined) validated.is_active = Boolean(data.is_active);
+      if (data.is_featured !== undefined) validated.is_featured = Boolean(data.is_featured);
+      if (data.sort_order !== undefined) {
+        const sortOrder = Number(data.sort_order);
+        if (isNaN(sortOrder) || sortOrder < 0) return { error: "sort_order must be a non-negative integer" };
+        validated.sort_order = Math.floor(sortOrder);
+      }
+      if (data.created_by !== undefined) {
+        if (data.created_by && !isValidUUID(String(data.created_by))) {
+          return { error: "Invalid created_by format (must be UUID)" };
+        }
+        validated.created_by = data.created_by || null;
+      }
+      if (data.id) {
+        if (!isValidUUID(String(data.id))) return { error: "Invalid id format (must be UUID)" };
+        validated.id = data.id;
+      }
+      
+      return { data: validated };
+    }
+
+    case "learning_modules": {
+      const validated: Record<string, unknown> = {};
+      
+      if (data.track_id !== undefined) {
+        if (!data.track_id || !isValidUUID(String(data.track_id))) return { error: "track_id is required and must be a valid UUID" };
+        validated.track_id = data.track_id;
+      }
+      if (data.title !== undefined) {
+        if (!data.title || String(data.title).trim().length === 0) return { error: "title is required" };
+        validated.title = sanitizeString(String(data.title), 255);
+      }
+      if (data.description !== undefined) validated.description = data.description ? sanitizeString(String(data.description), 2000) : null;
+      if (data.is_active !== undefined) validated.is_active = Boolean(data.is_active);
+      if (data.sort_order !== undefined) {
+        const sortOrder = Number(data.sort_order);
+        if (isNaN(sortOrder) || sortOrder < 0) return { error: "sort_order must be a non-negative integer" };
+        validated.sort_order = Math.floor(sortOrder);
+      }
+      if (data.id) {
+        if (!isValidUUID(String(data.id))) return { error: "Invalid id format (must be UUID)" };
+        validated.id = data.id;
+      }
+      
+      return { data: validated };
+    }
+
+    case "learning_contents": {
+      const validated: Record<string, unknown> = {};
+      
+      if (data.module_id !== undefined) {
+        if (!data.module_id || !isValidUUID(String(data.module_id))) return { error: "module_id is required and must be a valid UUID" };
+        validated.module_id = data.module_id;
+      }
+      if (data.title !== undefined) {
+        if (!data.title || String(data.title).trim().length === 0) return { error: "title is required" };
+        validated.title = sanitizeString(String(data.title), 255);
+      }
+      if (data.description !== undefined) validated.description = data.description ? sanitizeString(String(data.description), 2000) : null;
+      if (data.content_type !== undefined) {
+        const validTypes = ["video", "text"];
+        if (!validTypes.includes(String(data.content_type))) {
+          return { error: `Invalid content_type. Must be one of: ${validTypes.join(", ")}` };
+        }
+        validated.content_type = data.content_type;
+      }
+      if (data.video_url !== undefined) {
+        if (data.video_url && !isValidURL(String(data.video_url))) {
+          return { error: "Invalid video_url format (must be valid URL)" };
+        }
+        validated.video_url = data.video_url ? sanitizeString(String(data.video_url), 1000) : null;
+      }
+      if (data.text_content !== undefined) validated.text_content = data.text_content ? sanitizeString(String(data.text_content), 50000) : null;
+      if (data.duration_minutes !== undefined) {
+        const duration = Number(data.duration_minutes);
+        if (isNaN(duration) || duration < 0) return { error: "duration_minutes must be a non-negative integer" };
+        validated.duration_minutes = Math.floor(duration);
+      }
+      if (data.is_active !== undefined) validated.is_active = Boolean(data.is_active);
+      if (data.sort_order !== undefined) {
+        const sortOrder = Number(data.sort_order);
+        if (isNaN(sortOrder) || sortOrder < 0) return { error: "sort_order must be a non-negative integer" };
+        validated.sort_order = Math.floor(sortOrder);
+      }
+      if (data.id) {
+        if (!isValidUUID(String(data.id))) return { error: "Invalid id format (must be UUID)" };
+        validated.id = data.id;
+      }
+      
+      return { data: validated };
+    }
+
+    // ==========================================
+    // Support Materials - Media Library
+    // ==========================================
+    case "media_categories": {
+      const validated: Record<string, unknown> = {};
+      
+      if (data.name !== undefined) {
+        if (!data.name || String(data.name).trim().length === 0) return { error: "name is required" };
+        validated.name = sanitizeString(String(data.name), 100);
+      }
+      if (data.display_name !== undefined) {
+        if (!data.display_name || String(data.display_name).trim().length === 0) return { error: "display_name is required" };
+        validated.display_name = sanitizeString(String(data.display_name), 255);
+      }
+      if (data.type !== undefined) {
+        const validTypes = ["photo", "video", "file"];
+        if (!validTypes.includes(String(data.type))) {
+          return { error: `Invalid type. Must be one of: ${validTypes.join(", ")}` };
+        }
+        validated.type = data.type;
+      }
+      if (data.description !== undefined) validated.description = data.description ? sanitizeString(String(data.description), 1000) : null;
+      if (data.cover_url !== undefined) {
+        if (data.cover_url && !isValidURL(String(data.cover_url))) {
+          return { error: "Invalid cover_url format (must be valid URL)" };
+        }
+        validated.cover_url = data.cover_url ? sanitizeString(String(data.cover_url), 1000) : null;
+      }
+      if (data.is_active !== undefined) validated.is_active = Boolean(data.is_active);
+      if (data.sort_order !== undefined) {
+        const sortOrder = Number(data.sort_order);
+        if (isNaN(sortOrder) || sortOrder < 0) return { error: "sort_order must be a non-negative integer" };
+        validated.sort_order = Math.floor(sortOrder);
+      }
+      if (data.id) {
+        if (!isValidUUID(String(data.id))) return { error: "Invalid id format (must be UUID)" };
+        validated.id = data.id;
+      }
+      
+      return { data: validated };
+    }
+
+    case "media_items": {
+      const validated: Record<string, unknown> = {};
+      
+      if (data.category_id !== undefined) {
+        if (!data.category_id || !isValidUUID(String(data.category_id))) return { error: "category_id is required and must be a valid UUID" };
+        validated.category_id = data.category_id;
+      }
+      if (data.title !== undefined) {
+        if (!data.title || String(data.title).trim().length === 0) return { error: "title is required" };
+        validated.title = sanitizeString(String(data.title), 255);
+      }
+      if (data.description !== undefined) validated.description = data.description ? sanitizeString(String(data.description), 1000) : null;
+      if (data.file_url !== undefined) {
+        if (!data.file_url) return { error: "file_url is required" };
+        const urlStr = String(data.file_url);
+        if (!isValidURL(urlStr)) {
+          return { error: "Invalid file_url format (must be valid URL)" };
+        }
+        validated.file_url = sanitizeString(urlStr, 1000);
+      }
+      if (data.thumbnail_url !== undefined) {
+        if (data.thumbnail_url && !isValidURL(String(data.thumbnail_url))) {
+          return { error: "Invalid thumbnail_url format (must be valid URL)" };
+        }
+        validated.thumbnail_url = data.thumbnail_url ? sanitizeString(String(data.thumbnail_url), 1000) : null;
+      }
+      if (data.file_type !== undefined) {
+        if (!data.file_type) return { error: "file_type is required" };
+        validated.file_type = sanitizeString(String(data.file_type), 20);
+      }
+      if (data.file_size !== undefined) {
+        const size = Number(data.file_size);
+        if (isNaN(size) || size < 0) return { error: "file_size must be a non-negative integer" };
+        validated.file_size = Math.floor(size);
+      }
+      if (data.media_type !== undefined) {
+        const validTypes = ["photo", "video", "file"];
+        if (!validTypes.includes(String(data.media_type))) {
+          return { error: `Invalid media_type. Must be one of: ${validTypes.join(", ")}` };
+        }
+        validated.media_type = data.media_type;
+      }
+      if (data.dimensions !== undefined) {
+        if (data.dimensions && typeof data.dimensions === 'object') {
+          validated.dimensions = data.dimensions;
+        } else {
+          validated.dimensions = null;
+        }
+      }
+      if (data.duration_seconds !== undefined) {
+        const duration = Number(data.duration_seconds);
+        if (isNaN(duration) || duration < 0) return { error: "duration_seconds must be a non-negative integer" };
+        validated.duration_seconds = Math.floor(duration);
+      }
+      if (data.is_active !== undefined) validated.is_active = Boolean(data.is_active);
+      if (data.sort_order !== undefined) {
+        const sortOrder = Number(data.sort_order);
+        if (isNaN(sortOrder) || sortOrder < 0) return { error: "sort_order must be a non-negative integer" };
+        validated.sort_order = Math.floor(sortOrder);
+      }
+      if (data.created_by !== undefined) {
+        if (data.created_by && !isValidUUID(String(data.created_by))) {
+          return { error: "Invalid created_by format (must be UUID)" };
+        }
+        validated.created_by = data.created_by || null;
+      }
       if (data.id) {
         if (!isValidUUID(String(data.id))) return { error: "Invalid id format (must be UUID)" };
         validated.id = data.id;
