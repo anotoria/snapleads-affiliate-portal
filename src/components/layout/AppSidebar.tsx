@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Wallet, Settings, TrendingUp, FileText, FolderOpen, HelpCircle, LucideIcon } from "lucide-react";
+import { LayoutDashboard, Users, Wallet, Settings, TrendingUp, FileText, FolderOpen, HelpCircle, LucideIcon, GraduationCap } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { Logo } from "@/components/Logo";
@@ -40,6 +40,7 @@ export const AppSidebar = () => {
     { title: t.nav.payouts, url: "/payouts", icon: Wallet },
     { title: t.nav.commissions, url: "/commissions", icon: TrendingUp },
     { title: t.nav.reports, url: "/reports", icon: FileText },
+    { title: "Materiais de Apoio", url: "/materials", icon: GraduationCap },
     { title: t.nav.documents, url: "/documents", icon: FolderOpen, disabled: true },
     { title: t.nav.support, url: "/support", icon: HelpCircle },
     { title: t.nav.settings, url: "/settings", icon: Settings },

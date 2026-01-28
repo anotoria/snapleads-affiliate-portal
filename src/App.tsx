@@ -17,6 +17,14 @@ import Documents from "./pages/Documents";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
+// Support Materials Pages
+import SupportMaterials from "./pages/SupportMaterials";
+import Tracks from "./pages/Tracks";
+import TrackDetail from "./pages/TrackDetail";
+import ContentPlayer from "./pages/ContentPlayer";
+import MediaLibrary from "./pages/MediaLibrary";
+import MediaCategory from "./pages/MediaCategory";
+
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
@@ -25,6 +33,11 @@ import AdminPricing from "./pages/admin/AdminPricing";
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminAdmins from "./pages/admin/AdminAdmins";
 import AdminSACommissions from "./pages/admin/AdminSACommissions";
+import AdminTracks from "./pages/admin/AdminTracks";
+import AdminTrackModules from "./pages/admin/AdminTrackModules";
+import AdminContents from "./pages/admin/AdminContents";
+import AdminMedia from "./pages/admin/AdminMedia";
+import AdminMediaItems from "./pages/admin/AdminMediaItems";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +62,15 @@ const App = () => (
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/support" element={<Support />} />
                 
+                {/* Support Materials Routes */}
+                <Route path="/materials" element={<SupportMaterials />} />
+                <Route path="/materials/tracks" element={<Tracks />} />
+                <Route path="/materials/tracks/:id" element={<TrackDetail />} />
+                <Route path="/materials/tracks/:id/content/:contentId" element={<ContentPlayer />} />
+                <Route path="/materials/media" element={<MediaLibrary />} />
+                <Route path="/materials/media/:type" element={<MediaLibrary />} />
+                <Route path="/materials/media/:type/:categoryId" element={<MediaCategory />} />
+                
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/affiliates" element={<AdminAffiliates />} />
@@ -57,6 +79,11 @@ const App = () => (
                 <Route path="/admin/support" element={<AdminSupport />} />
                 <Route path="/admin/admins" element={<AdminAdmins />} />
                 <Route path="/admin/sa-commissions" element={<AdminSACommissions />} />
+                <Route path="/admin/tracks" element={<AdminTracks />} />
+                <Route path="/admin/tracks/:id/modules" element={<AdminTrackModules />} />
+                <Route path="/admin/tracks/:trackId/modules/:moduleId/contents" element={<AdminContents />} />
+                <Route path="/admin/media" element={<AdminMedia />} />
+                <Route path="/admin/media/items/:categoryId" element={<AdminMediaItems />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
