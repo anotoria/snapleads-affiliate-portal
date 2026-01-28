@@ -6,7 +6,9 @@ import {
   HelpCircle, 
   Shield, 
   ArrowLeft,
-  Wallet
+  Wallet,
+  BookOpen,
+  ImageIcon
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -40,6 +42,8 @@ export const AdminSidebar = () => {
     { title: t.nav.adminUsers, url: "/admin/affiliates", icon: Users },
     { title: t.nav.adminTiers, url: "/admin/tiers", icon: Award },
     { title: t.nav.adminPricing, url: "/admin/pricing", icon: DollarSign },
+    { title: "Trilhas", url: "/admin/tracks", icon: BookOpen },
+    { title: "Mídias", url: "/admin/media", icon: ImageIcon },
     { title: t.nav.adminSupport, url: "/admin/support", icon: HelpCircle },
   ];
 
