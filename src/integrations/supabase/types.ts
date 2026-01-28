@@ -833,7 +833,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      commission_history_user: {
+        Row: {
+          calculated_at: string | null
+          client_count: number | null
+          created_at: string | null
+          id: string | null
+          paid_at: string | null
+          reference_month: string | null
+          status: string | null
+          total_value: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          calculated_at?: string | null
+          client_count?: number | null
+          created_at?: string | null
+          id?: string | null
+          paid_at?: string | null
+          reference_month?: string | null
+          status?: string | null
+          total_value?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          calculated_at?: string | null
+          client_count?: number | null
+          created_at?: string | null
+          id?: string | null
+          paid_at?: string | null
+          reference_month?: string | null
+          status?: string | null
+          total_value?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_monthly_value: {
@@ -855,6 +893,14 @@ export type Database = {
           _details?: Json
           _record_id?: string
           _table_accessed: string
+        }
+        Returns: undefined
+      }
+      log_sensitive_data_access: {
+        Args: {
+          _query_type?: string
+          _record_count: number
+          _table_name: string
         }
         Returns: undefined
       }
