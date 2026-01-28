@@ -364,6 +364,7 @@ type CommonTranslations = {
   error: string;
   success: string;
   noData: string;
+  comingSoon: string;
 };
 
 export type TranslationKeys = {
@@ -410,6 +411,7 @@ export const translations = {
       error: "Error",
       success: "Success",
       noData: "No data available",
+      comingSoon: "Coming Soon",
     },
     
     auth: {
@@ -781,6 +783,7 @@ export const translations = {
       error: "Erro",
       success: "Sucesso",
       noData: "Nenhum dado disponível",
+      comingSoon: "Em Breve",
     },
 
     auth: {
@@ -1152,6 +1155,7 @@ export const translations = {
       error: "Error",
       success: "Éxito",
       noData: "Sin datos disponibles",
+      comingSoon: "Próximamente",
     },
 
     auth: {

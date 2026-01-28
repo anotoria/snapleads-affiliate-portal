@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Wallet, Settings, TrendingUp, FileText, FolderOpen, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Users, Wallet, Settings, TrendingUp, FileText, FolderOpen, HelpCircle, LucideIcon } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { Logo } from "@/components/Logo";
@@ -6,6 +6,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PartnerStatusWidget } from "@/components/sidebar/PartnerStatusWidget";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +20,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
+interface NavItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  disabled?: boolean;
+}
+
 export const AppSidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -26,13 +34,13 @@ export const AppSidebar = () => {
   const { t } = useLanguage();
   const { profile } = useAuth();
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { title: t.nav.dashboard, url: "/", icon: LayoutDashboard },
     { title: t.nav.myLeads, url: "/leads", icon: Users },
     { title: t.nav.payouts, url: "/payouts", icon: Wallet },
     { title: t.nav.commissions, url: "/commissions", icon: TrendingUp },
     { title: t.nav.reports, url: "/reports", icon: FileText },
-    { title: t.nav.documents, url: "/documents", icon: FolderOpen },
+    { title: t.nav.documents, url: "/documents", icon: FolderOpen, disabled: true },
     { title: t.nav.support, url: "/support", icon: HelpCircle },
     { title: t.nav.settings, url: "/settings", icon: Settings },
   ];
@@ -77,19 +85,33 @@ export const AppSidebar = () => {
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={collapsed ? item.title : undefined}
+                    asChild={!item.disabled}
+                    isActive={!item.disabled && isActive(item.url)}
+                    tooltip={collapsed ? (item.disabled ? `${item.title} (${t.common.comingSoon})` : item.title) : undefined}
                   >
-                    <NavLink 
-                      to={item.url} 
-                      end={item.url === "/"}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
+                    {item.disabled ? (
+                      <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-muted-foreground/50 cursor-not-allowed">
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && (
+                          <span className="flex items-center gap-2">
+                            {item.title}
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 font-normal">
+                              {t.common.comingSoon}
+                            </Badge>
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <NavLink 
+                        to={item.url} 
+                        end={item.url === "/"}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
