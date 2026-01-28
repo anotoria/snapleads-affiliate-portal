@@ -1,60 +1,89 @@
 
-# Plano de Execução: Correção de Vulnerabilidades de Segurança
 
-## ✅ STATUS: CONCLUÍDO
+# Plano: Correção do Erro "Customer Contact Information Accessible Without Authentication"
 
-### Correções Implementadas
+## Problema Identificado
 
-| Problema | Nível | Status | Solução |
-|----------|-------|--------|---------|
-| All User Personal Data Exposed to Any Admin Account | ERROR | ✅ CORRIGIDO | Criado sistema de audit log com tabela `admin_data_access_log` e função `log_admin_data_access()` |
-| Support Ticket Contents Readable by All Admins | WARN | ✅ CORRIGIDO | Atualizado RLS para acesso baseado em atribuição |
-| n8n webhook uses service role key | WARN | ℹ️ MITIGADO | Já possui HMAC verification e audit logging |
-| Leaked Password Protection Disabled | WARN | ⚠️ AÇÃO MANUAL | Requer habilitação manual no Lovable Cloud |
-| Admin authorization only on client side | WARN | ✅ IGNORADO | Implementação correta confirmada |
+O scanner de segurança detectou que a tabela `leads` (que contém nomes e emails de clientes) não tem uma política RLS que **explicitamente bloqueie** acesso anônimo. Embora as políticas existentes usem `auth.uid() IS NOT NULL`, o padrão recomendado é adicionar uma política `RESTRICTIVE` que negue explicitamente o acesso anônimo.
 
----
+### Análise das Políticas Atuais
 
-## Alterações Realizadas
+| Tabela | Política | Tipo | Problema |
+|--------|----------|------|----------|
+| leads | Users can view their own leads | PERMISSIVE | Não bloqueia anônimo explicitamente |
+| leads | Admins can view all leads | PERMISSIVE | Não bloqueia anônimo explicitamente |
+| tiers | Authenticated users can view active tiers | PERMISSIVE | Warning: visível para todos autenticados |
 
-### 1. Migração SQL Executada
+### Por que isso é um problema?
 
-**Nova tabela `admin_data_access_log`:**
-- Registra todos os acessos de admins a dados sensíveis
-- Campos: `id`, `admin_user_id`, `action`, `table_accessed`, `record_id`, `accessed_at`, `details`
-- RLS: Apenas super_admins podem visualizar logs
-
-**Nova função `log_admin_data_access()`:**
-- SECURITY DEFINER para permitir inserção por admins
-- Registra automaticamente acessos a dados sensíveis
-
-**RLS Atualizado para `support_tickets`:**
-- Super admins: acesso total
-- Admins regulares: apenas tickets atribuídos ou não atribuídos
-- Usuários: apenas seus próprios tickets
-
-**RLS Atualizado para `support_messages`:**
-- Alinhado com a nova política de tickets
-
-### 2. Hook `useAdminAffiliates.tsx` Atualizado
-
-- Adicionada chamada RPC para registrar acesso quando admins buscam dados de afiliados
-- Logging automático com contexto e contagem de registros
+Políticas `PERMISSIVE` combinam com `OR` - se uma delas permitir, o acesso é concedido. A melhor prática é ter uma política `RESTRICTIVE` base que exija autenticação, garantindo que mesmo se houver um bug em outras políticas, usuários anônimos não terão acesso.
 
 ---
 
-## ⚠️ AÇÃO MANUAL NECESSÁRIA
+## Solução Proposta
 
-### Habilitar Leaked Password Protection
+### 1. Adicionar Política RESTRICTIVE para Bloquear Anônimos (ERROR Fix)
 
-Para corrigir o warning "Leaked Password Protection Disabled":
+Criar uma política `RESTRICTIVE` na tabela `leads` que exige autenticação. Políticas restrictivas combinam com `AND`, então o acesso anônimo será bloqueado mesmo que outras políticas tentem permitir.
 
-1. Clique em "View Backend" abaixo
-2. Navegue para **Users → Auth Settings → Email**
-3. Ative o switch **"Password HIBP Check"**
-4. Salve as configurações
+**SQL:**
+```sql
+CREATE POLICY "Deny anonymous access to leads"
+ON public.leads
+AS RESTRICTIVE
+FOR ALL
+TO public
+USING (auth.uid() IS NOT NULL);
+```
 
-Isso habilitará a verificação automática contra o banco de dados Have I Been Pwned.
+### 2. Tratar o Warning sobre Tiers (Opcional)
+
+O warning indica que todos os usuários autenticados podem ver a estrutura de comissões. Isso pode ser:
+- **Intencional**: O programa de afiliados é transparente sobre comissões
+- **Problema**: Concorrentes podem analisar a estrutura
+
+**Análise do uso atual:**
+- `TierProgressCard.tsx`: Mostra progresso do usuário no tier
+- `PartnerLevelCard.tsx`: Mostra nível atual do parceiro  
+- `Commissions.tsx`: Página de comissões do usuário
+- `PartnerStatusWidget.tsx`: Widget de status na sidebar
+
+Todos esses componentes precisam que o usuário veja os tiers para entender seu progresso. **Recomendo marcar como ignorado** pois a transparência é intencional para o programa de afiliados.
+
+---
+
+## Alterações a Implementar
+
+### Migração SQL
+
+```sql
+-- =====================================================
+-- FIX: Customer Contact Information Security
+-- =====================================================
+
+-- 1. Adicionar política RESTRICTIVE para bloquear acesso anônimo
+-- Esta política combina com AND com as outras, garantindo que
+-- auth.uid() deve ser NOT NULL para qualquer operação
+
+CREATE POLICY "Deny anonymous access to leads"
+ON public.leads
+AS RESTRICTIVE
+FOR ALL
+TO public
+USING (auth.uid() IS NOT NULL);
+
+-- =====================================================
+-- NOTA: Não adicionando política similar para tiers porque
+-- a visibilidade dos tiers para usuários autenticados é 
+-- intencional para o programa de afiliados
+-- =====================================================
+```
+
+### Atualização de Security Findings
+
+Após implementar:
+1. **Deletar** o finding `leads_missing_select_policy` (corrigido)
+2. **Ignorar** o finding `tiers_overly_permissive` com justificativa de transparência intencional
 
 ---
 
@@ -62,16 +91,59 @@ Isso habilitará a verificação automática contra o banco de dados Have I Been
 
 ### Comportamento Após Implementação
 
-**Admins regulares:**
-- Continuam podendo ver dados de afiliados
-- Todos os acessos são registrados em audit log
-- Só podem ver tickets de suporte atribuídos a eles ou não atribuídos
+| Cenário | Antes | Depois |
+|---------|-------|--------|
+| Usuário anônimo tenta SELECT em leads | Bloqueado por `auth.uid() IS NOT NULL` | Bloqueado explicitamente por política RESTRICTIVE |
+| Usuário autenticado vê seus leads | Permitido | Permitido (sem mudança) |
+| Admin vê todos os leads | Permitido | Permitido (sem mudança) |
 
-**Super admins:**
-- Podem ver todos os dados (sem mudança)
-- Podem ver o audit log de acessos
-- Acesso total a todos os tickets
+### Por que usar RESTRICTIVE ao invés de uma política normal?
 
-**Usuários:**
-- Comportamento inalterado
-- Só veem seus próprios dados e tickets
+- Políticas `PERMISSIVE` combinam com `OR` → qualquer uma que permita = acesso concedido
+- Políticas `RESTRICTIVE` combinam com `AND` → TODAS devem permitir = acesso concedido
+- Uma política RESTRICTIVE de base garante que **sempre** haverá verificação de autenticação
+
+---
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| Nova migração SQL | Adicionar política RESTRICTIVE para leads |
+| Security Findings | Deletar finding corrigido + ignorar warning de tiers |
+
+---
+
+## Detalhes Técnicos
+
+### Como políticas RLS funcionam
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                   POLÍTICAS PERMISSIVE                       │
+│                                                              │
+│  Policy A: auth.uid() = user_id                              │
+│  Policy B: is_admin(auth.uid())                              │
+│                                                              │
+│  Resultado: A OR B (qualquer uma permite acesso)             │
+└─────────────────────────────────────────────────────────────┘
+                           AND
+┌─────────────────────────────────────────────────────────────┐
+│                   POLÍTICAS RESTRICTIVE                      │
+│                                                              │
+│  Policy C: auth.uid() IS NOT NULL                            │
+│                                                              │
+│  Resultado: C AND (A OR B)                                   │
+│  → Deve estar autenticado E (ser dono OU ser admin)          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Justificativa para ignorar warning de tiers
+
+O programa de afiliados é baseado em transparência - os afiliados precisam ver:
+- Qual tier estão atualmente
+- Quais são os requisitos para próximo tier
+- Quais são as comissões em cada nível
+
+Esta é uma decisão de negócio, não uma vulnerabilidade de segurança.
+
