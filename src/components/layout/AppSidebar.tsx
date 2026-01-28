@@ -40,7 +40,7 @@ export const AppSidebar = () => {
     { title: t.nav.payouts, url: "/payouts", icon: Wallet },
     { title: t.nav.commissions, url: "/commissions", icon: TrendingUp },
     { title: t.nav.reports, url: "/reports", icon: FileText },
-    { title: "Materiais de Apoio", url: "/materials", icon: GraduationCap },
+    { title: t.nav.supportMaterials, url: "/materials", icon: GraduationCap },
     { title: t.nav.documents, url: "/documents", icon: FolderOpen, disabled: true },
     { title: t.nav.support, url: "/support", icon: HelpCircle },
     { title: t.nav.settings, url: "/settings", icon: Settings },

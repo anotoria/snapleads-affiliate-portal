@@ -19,6 +19,11 @@ O webhook `n8n-webhook` é uma Edge Function do Supabase que permite integraçã
 | `support_tickets` | Tickets de suporte |
 | `support_messages` | Mensagens de tickets |
 | `user_roles` | Papéis de usuário |
+| `learning_tracks` | Trilhas de aprendizado |
+| `learning_modules` | Módulos das trilhas |
+| `learning_contents` | Conteúdos dos módulos |
+| `media_categories` | Categorias de mídia |
+| `media_items` | Itens de mídia |
 
 ### Actions Suportadas
 
@@ -990,6 +995,355 @@ Gerencia papéis de usuário.
 
 ---
 
+## Tabelas de Materiais de Apoio
+
+As tabelas abaixo são utilizadas para gerenciar o sistema de materiais de apoio (trilhas de aprendizado e biblioteca de mídias).
+
+### 12. Learning Tracks (Trilhas de Aprendizado)
+
+Gerencia as trilhas/cursos de aprendizado para afiliados.
+
+#### Campos Disponíveis
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `title` | string | ✅ Sim | Título da trilha (máx. 255 caracteres) |
+| `description` | string | ❌ Não | Descrição da trilha (máx. 5000 caracteres) |
+| `cover_url` | string | ❌ Não | URL da capa (estilo Netflix) |
+| `is_active` | boolean | ❌ Não | Status ativo/inativo (padrão: true) |
+| `is_featured` | boolean | ❌ Não | Destaque na home (padrão: false) |
+| `sort_order` | integer | ❌ Não | Ordem de exibição (padrão: 0) |
+| `created_by` | UUID | ❌ Não | ID do admin que criou |
+
+#### Buscar Tracks (get)
+
+```json
+{
+  "action": "get",
+  "table": "learning_tracks",
+  "filters": {
+    "is_active": true,
+    "is_featured": true,
+    "limit": 20
+  }
+}
+```
+
+#### Criar Track (insert)
+
+```json
+{
+  "action": "insert",
+  "table": "learning_tracks",
+  "data": {
+    "title": "Introdução ao Programa de Afiliados",
+    "description": "Aprenda os conceitos básicos do programa...",
+    "cover_url": "https://storage.example.com/covers/track1.jpg",
+    "is_active": true,
+    "is_featured": true,
+    "sort_order": 1
+  }
+}
+```
+
+#### Atualizar Track (update)
+
+```json
+{
+  "action": "update",
+  "table": "learning_tracks",
+  "data": {
+    "title": "Novo Título da Trilha",
+    "is_featured": false
+  },
+  "match": {
+    "id": "uuid-da-trilha"
+  }
+}
+```
+
+---
+
+### 13. Learning Modules (Módulos)
+
+Gerencia os módulos dentro das trilhas de aprendizado.
+
+#### Campos Disponíveis
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `track_id` | UUID | ✅ Sim | ID da trilha pai |
+| `title` | string | ✅ Sim | Título do módulo (máx. 255 caracteres) |
+| `description` | string | ❌ Não | Descrição do módulo (máx. 2000 caracteres) |
+| `is_active` | boolean | ❌ Não | Status ativo/inativo (padrão: true) |
+| `sort_order` | integer | ❌ Não | Ordem dentro da trilha (padrão: 0) |
+
+#### Buscar Modules (get)
+
+```json
+{
+  "action": "get",
+  "table": "learning_modules",
+  "filters": {
+    "track_id": "uuid-da-trilha",
+    "is_active": true
+  }
+}
+```
+
+#### Criar Module (insert)
+
+```json
+{
+  "action": "insert",
+  "table": "learning_modules",
+  "data": {
+    "track_id": "uuid-da-trilha",
+    "title": "Módulo 1: Fundamentos",
+    "description": "Neste módulo você aprenderá os fundamentos...",
+    "is_active": true,
+    "sort_order": 1
+  }
+}
+```
+
+---
+
+### 14. Learning Contents (Conteúdos)
+
+Gerencia os conteúdos (vídeos ou textos) dentro dos módulos.
+
+#### Campos Disponíveis
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `module_id` | UUID | ✅ Sim | ID do módulo pai |
+| `title` | string | ✅ Sim | Título do conteúdo (máx. 255 caracteres) |
+| `description` | string | ❌ Não | Descrição do conteúdo (máx. 2000 caracteres) |
+| `content_type` | string | ❌ Não | Tipo: 'video' ou 'text' (padrão: 'video') |
+| `video_url` | string | ❌ Não | URL do vídeo (se content_type = 'video') |
+| `text_content` | string | ❌ Não | Conteúdo em texto/HTML (se content_type = 'text') |
+| `duration_minutes` | integer | ❌ Não | Duração em minutos |
+| `is_active` | boolean | ❌ Não | Status ativo/inativo (padrão: true) |
+| `sort_order` | integer | ❌ Não | Ordem dentro do módulo (padrão: 0) |
+
+#### Buscar Contents (get)
+
+```json
+{
+  "action": "get",
+  "table": "learning_contents",
+  "filters": {
+    "module_id": "uuid-do-modulo",
+    "is_active": true
+  }
+}
+```
+
+#### Criar Content de Vídeo (insert)
+
+```json
+{
+  "action": "insert",
+  "table": "learning_contents",
+  "data": {
+    "module_id": "uuid-do-modulo",
+    "title": "Bem-vindo ao Programa",
+    "description": "Vídeo de boas-vindas ao programa de afiliados",
+    "content_type": "video",
+    "video_url": "https://www.youtube.com/watch?v=example",
+    "duration_minutes": 10,
+    "is_active": true,
+    "sort_order": 1
+  }
+}
+```
+
+#### Criar Content de Texto (insert)
+
+```json
+{
+  "action": "insert",
+  "table": "learning_contents",
+  "data": {
+    "module_id": "uuid-do-modulo",
+    "title": "Guia de Referência",
+    "description": "Material de leitura complementar",
+    "content_type": "text",
+    "text_content": "<h2>Introdução</h2><p>Este é o guia de referência...</p>",
+    "duration_minutes": 5,
+    "is_active": true,
+    "sort_order": 2
+  }
+}
+```
+
+---
+
+### 15. Media Categories (Categorias de Mídia)
+
+Gerencia as categorias para organização de mídias.
+
+#### Campos Disponíveis
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `name` | string | ✅ Sim | Nome interno (máx. 100 caracteres, único) |
+| `display_name` | string | ✅ Sim | Nome de exibição (máx. 255 caracteres) |
+| `type` | string | ✅ Sim | Tipo: 'photo', 'video' ou 'file' |
+| `description` | string | ❌ Não | Descrição da categoria (máx. 1000 caracteres) |
+| `cover_url` | string | ❌ Não | URL da capa da categoria |
+| `is_active` | boolean | ❌ Não | Status ativo/inativo (padrão: true) |
+| `sort_order` | integer | ❌ Não | Ordem de exibição (padrão: 0) |
+
+**Tipos Válidos:**
+
+| Tipo | Descrição |
+|------|-----------|
+| `photo` | Imagens (JPG, PNG, GIF, etc.) |
+| `video` | Vídeos (MP4, WebM, etc.) |
+| `file` | Arquivos diversos (PDF, DOC, etc.) |
+
+#### Buscar Media Categories (get)
+
+```json
+{
+  "action": "get",
+  "table": "media_categories",
+  "filters": {
+    "type": "photo",
+    "is_active": true
+  }
+}
+```
+
+#### Criar Media Category (insert)
+
+```json
+{
+  "action": "insert",
+  "table": "media_categories",
+  "data": {
+    "name": "banners-promocionais",
+    "display_name": "Banners Promocionais",
+    "type": "photo",
+    "description": "Banners para redes sociais e anúncios",
+    "cover_url": "https://storage.example.com/covers/banners.jpg",
+    "is_active": true,
+    "sort_order": 1
+  }
+}
+```
+
+---
+
+### 16. Media Items (Itens de Mídia)
+
+Gerencia os arquivos de mídia dentro das categorias.
+
+#### Campos Disponíveis
+
+| Campo | Tipo | Obrigatório | Descrição |
+|-------|------|-------------|-----------|
+| `category_id` | UUID | ✅ Sim | ID da categoria pai |
+| `title` | string | ✅ Sim | Título do item (máx. 255 caracteres) |
+| `description` | string | ❌ Não | Descrição do item (máx. 1000 caracteres) |
+| `file_url` | string | ✅ Sim | URL do arquivo (máx. 1000 caracteres) |
+| `thumbnail_url` | string | ❌ Não | URL da miniatura (máx. 1000 caracteres) |
+| `file_type` | string | ✅ Sim | Extensão do arquivo (jpg, png, mp4, pdf, etc.) |
+| `file_size` | integer | ❌ Não | Tamanho do arquivo em bytes |
+| `media_type` | string | ✅ Sim | Tipo: 'photo', 'video' ou 'file' |
+| `dimensions` | JSONB | ❌ Não | Dimensões {width, height} para imagens |
+| `duration_seconds` | integer | ❌ Não | Duração em segundos (para vídeos) |
+| `is_active` | boolean | ❌ Não | Status ativo/inativo (padrão: true) |
+| `sort_order` | integer | ❌ Não | Ordem de exibição (padrão: 0) |
+| `created_by` | UUID | ❌ Não | ID do admin que criou |
+
+#### Buscar Media Items (get)
+
+```json
+{
+  "action": "get",
+  "table": "media_items",
+  "filters": {
+    "category_id": "uuid-da-categoria",
+    "media_type": "photo",
+    "is_active": true,
+    "limit": 50
+  }
+}
+```
+
+**Resposta:**
+
+```json
+{
+  "success": true,
+  "result": {
+    "action": "get",
+    "table": "media_items",
+    "data": [
+      {
+        "id": "uuid",
+        "category_id": "uuid",
+        "title": "Banner Janeiro 2026",
+        "description": "Banner promocional para janeiro",
+        "file_url": "https://storage.example.com/media/banner-jan.jpg",
+        "thumbnail_url": "https://storage.example.com/thumbnails/banner-jan-thumb.jpg",
+        "file_type": "jpg",
+        "file_size": 245000,
+        "media_type": "photo",
+        "dimensions": {"width": 1200, "height": 628},
+        "download_count": 42,
+        "is_active": true,
+        "created_at": "2026-01-15T10:00:00Z"
+      }
+    ],
+    "count": 1
+  }
+}
+```
+
+#### Criar Media Item (insert)
+
+```json
+{
+  "action": "insert",
+  "table": "media_items",
+  "data": {
+    "category_id": "uuid-da-categoria",
+    "title": "Banner Promocional Janeiro",
+    "description": "Banner para redes sociais - Janeiro 2026",
+    "file_url": "https://storage.example.com/media/banner-jan.jpg",
+    "thumbnail_url": "https://storage.example.com/thumbnails/banner-jan-thumb.jpg",
+    "file_type": "jpg",
+    "file_size": 245000,
+    "media_type": "photo",
+    "dimensions": {"width": 1200, "height": 628},
+    "is_active": true,
+    "sort_order": 1
+  }
+}
+```
+
+#### Atualizar Media Item (update)
+
+```json
+{
+  "action": "update",
+  "table": "media_items",
+  "data": {
+    "title": "Banner Atualizado",
+    "description": "Nova descrição do banner"
+  },
+  "match": {
+    "id": "uuid-do-item"
+  }
+}
+```
+
+---
+
 ## Actions Especiais
 
 ### calculate_tier
@@ -1568,6 +1922,14 @@ Apenas algumas tabelas permitem exclusão via webhook:
 ---
 
 ## Changelog
+
+### v2.1 (Janeiro 2026)
+- Adicionadas 5 novas tabelas de Materiais de Apoio: learning_tracks, learning_modules, learning_contents, media_categories, media_items
+- Sistema completo de trilhas de aprendizado para afiliados
+- Biblioteca de mídias organizada por categorias (fotos, vídeos, arquivos)
+- Suporte a dimensões de imagem e duração de vídeos
+- Contador de downloads para itens de mídia
+- Documentação atualizada com novos exemplos
 
 ### v2.0 (Janeiro 2026)
 - Adicionadas 7 novas tabelas: user_roles, tiers, pricing_tiers, commission_history, documents, support_tickets, support_messages

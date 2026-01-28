@@ -42,8 +42,8 @@ export const AdminSidebar = () => {
     { title: t.nav.adminUsers, url: "/admin/affiliates", icon: Users },
     { title: t.nav.adminTiers, url: "/admin/tiers", icon: Award },
     { title: t.nav.adminPricing, url: "/admin/pricing", icon: DollarSign },
-    { title: "Trilhas", url: "/admin/tracks", icon: BookOpen },
-    { title: "Mídias", url: "/admin/media", icon: ImageIcon },
+    { title: t.nav.adminTracks, url: "/admin/tracks", icon: BookOpen },
+    { title: t.nav.adminMedia, url: "/admin/media", icon: ImageIcon },
     { title: t.nav.adminSupport, url: "/admin/support", icon: HelpCircle },
   ];
 
