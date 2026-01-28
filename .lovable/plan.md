@@ -1,41 +1,60 @@
 
-# Plano: Ajustar Background do Logo no Tema Escuro
+# Plano: Ajustar Background do Logo e Texto no Tema Escuro
 
 ## Resumo
 
-Alterar o background do header da sidebar (onde fica o logotipo) de `white/10` para `white/70` no tema escuro, aplicando a cor mais clara conforme validado.
+Alterar o background do header da sidebar para usar a cor lilás (primary) no tema escuro, e o texto "Programa de Afiliados" para roxo escuro em negrito.
 
 ---
 
 ## Alterações a Implementar
 
-### Arquivos a Modificar
+### 1. Atualizar Background do SidebarHeader
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/components/layout/AppSidebar.tsx` | Mudar `dark:bg-white/10` para `dark:bg-white/70` |
-| `src/components/admin/AdminSidebar.tsx` | Mudar `dark:bg-white/10` para `dark:bg-white/70` |
+**Arquivos:** `src/components/layout/AppSidebar.tsx` e `src/components/admin/AdminSidebar.tsx`
 
-### Código Atual vs Novo
+| Antes | Depois |
+|-------|--------|
+| `dark:bg-white/70` | `dark:bg-primary` |
 
-**Antes:**
+### 2. Atualizar Estilo do Subtítulo no Logo
+
+**Arquivo:** `src/components/Logo.tsx`
+
+| Propriedade | Antes | Depois |
+|-------------|-------|--------|
+| Cor (dark mode) | `text-muted-foreground` | `dark:text-[hsl(281,50%,6%)]` |
+| Peso | Normal | `font-semibold` |
+
+---
+
+## Código das Alterações
+
+### AppSidebar.tsx e AdminSidebar.tsx
 ```tsx
-<SidebarHeader className="... dark:bg-white/10 ...">
+<SidebarHeader className="... dark:bg-primary dark:rounded-lg dark:m-2 dark:mb-0 dark:border-none ...">
 ```
 
-**Depois:**
+### Logo.tsx
 ```tsx
-<SidebarHeader className="... dark:bg-white/70 ...">
+<span className={`text-xs text-muted-foreground dark:text-[hsl(281,50%,6%)] font-semibold mt-1 ...`}>
 ```
 
 ---
 
-## Resultado Visual
+## Resultado Visual (Tema Escuro)
 
-| Tema | Background | Cor Aproximada |
-|------|------------|----------------|
-| Claro | Sem background especial | Branco padrão |
-| Escuro (antes) | `white/10` | ~#2a2530 |
-| Escuro (depois) | `white/70` | ~#c5bfcb |
+| Elemento | Cor | Resultado |
+|----------|-----|-----------|
+| Background do header | Lilás (primary ~#b280e6) | Destaque vibrante |
+| Texto "Programa de Afiliados" | Roxo escuro (~#120a17) + bold | Alto contraste e legibilidade |
 
-A nova cor é um lilac-gray claro que mantém harmonia com a paleta purple da marca enquanto oferece contraste adequado para o logotipo.
+---
+
+## Arquivos Modificados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/layout/AppSidebar.tsx` | Background `dark:bg-primary` |
+| `src/components/admin/AdminSidebar.tsx` | Background `dark:bg-primary` |
+| `src/components/Logo.tsx` | Texto roxo escuro + bold |
