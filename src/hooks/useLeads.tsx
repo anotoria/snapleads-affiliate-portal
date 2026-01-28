@@ -33,7 +33,7 @@ export const useLeads = () => {
         throw error;
       }
 
-      return (data || []).map((lead) => ({
+      const leads = (data || []).map((lead) => ({
         id: lead.id,
         name: lead.name,
         email: lead.email,
@@ -42,6 +42,21 @@ export const useLeads = () => {
         created_at: lead.created_at,
         updated_at: lead.updated_at,
       }));
+
+      // Registrar acesso a dados sensiveis para auditoria
+      if (leads.length > 0) {
+        supabase.rpc("log_sensitive_data_access", {
+          _table_name: "leads",
+          _record_count: leads.length,
+          _query_type: "select",
+        }).then(({ error: logError }) => {
+          if (logError) {
+            console.warn("Failed to log data access:", logError.message);
+          }
+        });
+      }
+
+      return leads;
     },
     enabled: !!user?.id,
   });
