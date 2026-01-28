@@ -35,6 +35,16 @@ export const useAdminAffiliates = () => {
 
       if (profilesError) throw profilesError;
 
+      // Log admin access to profiles data for audit trail
+      await supabase.rpc('log_admin_data_access', {
+        _action: 'VIEW',
+        _table_accessed: 'profiles',
+        _details: { 
+          record_count: profiles?.length || 0, 
+          context: 'admin_affiliates_list' 
+        }
+      });
+
       // Get all leads grouped by user_id
       const { data: leads, error: leadsError } = await supabase
         .from("leads")

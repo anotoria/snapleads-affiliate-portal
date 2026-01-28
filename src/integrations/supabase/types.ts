@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_data_access_log: {
+        Row: {
+          accessed_at: string
+          action: string
+          admin_user_id: string
+          details: Json | null
+          id: string
+          record_id: string | null
+          table_accessed: string
+        }
+        Insert: {
+          accessed_at?: string
+          action: string
+          admin_user_id: string
+          details?: Json | null
+          id?: string
+          record_id?: string | null
+          table_accessed: string
+        }
+        Update: {
+          accessed_at?: string
+          action?: string
+          admin_user_id?: string
+          details?: Json | null
+          id?: string
+          record_id?: string | null
+          table_accessed?: string
+        }
+        Relationships: []
+      }
       commission_history: {
         Row: {
           base_revenue: number
@@ -538,6 +568,15 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      log_admin_data_access: {
+        Args: {
+          _action: string
+          _details?: Json
+          _record_id?: string
+          _table_accessed: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "super_admin" | "user"
