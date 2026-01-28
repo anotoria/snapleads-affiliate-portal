@@ -1,241 +1,254 @@
 
+# Plano de Atualizacao da Documentacao e Edge Function do Webhook
 
-# Plano de Correcoes de Seguranca
+## Problema Identificado
 
-## Resumo dos Problemas Identificados
+A documentacao em `docs/WEBHOOK_DOCUMENTATION.md` esta **DESATUALIZADA** em relacao ao codigo da Edge Function `n8n-webhook`.
 
-### ERROS (Prioridade Alta)
+### Inconsistencia Principal
 
-1. **User Personal Information Could Be Stolen by Hackers**
-   - Tabela `profiles` contem dados sensiveis (telefone, CNPJ, nome completo, codigo de afiliado)
-   - Risco de enumeracao de usuarios atraves de queries sistematicas
+A documentacao v2.1 menciona 16 tabelas suportadas, mas a Edge Function so implementa **11 tabelas**:
 
-2. **Customer Email Addresses Could Be Harvested by Competitors**
-   - Tabela `leads` expoe emails de clientes
-   - Conta comprometida pode extrair todos os emails dos leads
-   - Sem rate limiting ou auditoria de acessos em massa
-
-### WARNINGS (Prioridade Media)
-
-3. **Admin authorization only on client side** - JA RESOLVIDO
-   - Status: IGNORADO corretamente
-   - Autorizacao admin e verificada server-side via RLS com funcoes SECURITY DEFINER
-
-4. **n8n webhook uses service role key** - PARCIALMENTE RESOLVIDO
-   - Ja possui validacao de secret e HMAC opcional
-   - Recomendacao: Atualizar documentacao confirmando que esta corretamente implementado
-
-5. **Commission Calculations Could Reveal Business Model**
-   - Tabela `commission_history` expoe taxas, bonus e formulas de calculo
-   - Usuarios podem reverter engenharia do modelo de comissoes
+| Status | Tabela | Documentada | Implementada |
+|--------|--------|-------------|--------------|
+| OK | profiles | Sim | Sim |
+| OK | leads | Sim | Sim |
+| OK | payouts | Sim | Sim |
+| OK | users | Sim | Sim |
+| OK | user_roles | Sim | Sim |
+| OK | tiers | Sim | Sim |
+| OK | pricing_tiers | Sim | Sim |
+| OK | commission_history | Sim | Sim |
+| OK | documents | Sim | Sim |
+| OK | support_tickets | Sim | Sim |
+| OK | support_messages | Sim | Sim |
+| FALTA | learning_tracks | Sim | **NAO** |
+| FALTA | learning_modules | Sim | **NAO** |
+| FALTA | learning_contents | Sim | **NAO** |
+| FALTA | media_categories | Sim | **NAO** |
+| FALTA | media_items | Sim | **NAO** |
 
 ---
 
-## Solucoes Propostas
+## Solucao Proposta
 
-### 1. Protecao de Dados Pessoais (profiles)
+Implementar suporte completo as 5 tabelas de Materiais de Apoio na Edge Function para manter consistencia com a documentacao.
 
-**Objetivo:** Prevenir enumeracao de usuarios e proteger PII
+---
 
-**Abordagem: View Segura + Auditoria**
+## Fase 1: Atualizar Edge Function
 
-```text
-+------------------+     +-------------------+
-|  profiles (base) |     | profiles_public   |
-|  (acesso negado) | --> |    (view segura)  |
-+------------------+     +-------------------+
-        |                         |
-   Dados sensiveis           Dados filtrados
-   (CNPJ, telefone)          (apenas necessarios)
+### 1.1 Adicionar Novas Tabelas ao Type
+
+```typescript
+// Linha 148 - Atualizar TableName
+type TableName = "profiles" | "leads" | "payouts" | "users" | "user_roles" | 
+  "tiers" | "pricing_tiers" | "commission_history" | "documents" | 
+  "support_tickets" | "support_messages" |
+  "learning_tracks" | "learning_modules" | "learning_contents" | 
+  "media_categories" | "media_items";
 ```
 
-**Implementacao:**
+### 1.2 Adicionar ao VALID_TABLES
 
-1. Criar view `profiles_public` que exclui campos sensiveis para usuarios normais
-2. Manter RLS atual para admins (acesso total)
-3. Adicionar funcao de auditoria para acessos a dados sensiveis
-
-**Campos a Proteger:**
-- `cnpj` - Exibir apenas para o proprio usuario e admins
-- `phone` - Exibir apenas para o proprio usuario e admins
-- `affiliate_code` - Manter visivel (necessario para sistema de indicacao)
-
----
-
-### 2. Protecao de Emails de Leads
-
-**Objetivo:** Prevenir coleta em massa de emails e adicionar auditoria
-
-**Abordagem: Rate Limiting + Auditoria + Mascaramento**
-
-```text
-Requisicao de Leads
-        |
-        v
-+------------------+
-| Rate Limiting    |  <-- Max 100 leads/minuto
-+------------------+
-        |
-        v
-+------------------+
-| Audit Log        |  <-- Registrar acessos em massa
-+------------------+
-        |
-        v
-+------------------+
-| Dados Retornados |  <-- Email parcialmente mascarado (opcional)
-+------------------+
+```typescript
+// Linha 194-198
+const VALID_TABLES: TableName[] = [
+  "profiles", "leads", "payouts", "users", "user_roles", 
+  "tiers", "pricing_tiers", "commission_history", 
+  "documents", "support_tickets", "support_messages",
+  "learning_tracks", "learning_modules", "learning_contents",
+  "media_categories", "media_items"
+];
 ```
 
-**Implementacao:**
+### 1.3 Adicionar Filtros para Novas Tabelas
 
-1. **Auditoria de Acessos:** Criar tabela `data_access_log` para registrar consultas a dados sensiveis
-2. **Rate Limiting via Edge Function:** Criar endpoint seguro para consulta de leads com limite de requisicoes
-3. **Funcao de Auditoria:** Trigger para logar acessos a dados sensíveis
-4. **Alerta:** Notificar admins quando houver padrao suspeito de acesso
+```typescript
+// Atualizar interface GetFilters
+interface GetFilters {
+  // ... filtros existentes ...
+  track_id?: string;      // Para learning_modules
+  module_id?: string;     // Para learning_contents
+  category_id?: string;   // Para media_items
+  type?: string;          // Para media_categories (photo/video/file)
+  media_type?: string;    // Para media_items
+  is_featured?: boolean;  // Para learning_tracks
+}
+```
+
+### 1.4 Implementar handleGetOperation para Novas Tabelas
+
+Adicionar cases no switch de `handleGetOperation`:
+
+- `learning_tracks`: Buscar trilhas com filtros is_active, is_featured
+- `learning_modules`: Buscar modulos por track_id
+- `learning_contents`: Buscar conteudos por module_id
+- `media_categories`: Buscar categorias por type (photo/video/file)
+- `media_items`: Buscar itens por category_id e media_type
+
+### 1.5 Implementar validateTableData para Novas Tabelas
+
+Adicionar validacoes para cada tabela:
+
+**learning_tracks:**
+- title: obrigatorio, max 255 chars
+- description: opcional, max 5000 chars
+- cover_url: opcional, validar URL
+- is_active: boolean, padrao true
+- is_featured: boolean, padrao false
+- sort_order: integer, padrao 0
+- created_by: UUID opcional
+
+**learning_modules:**
+- track_id: UUID obrigatorio
+- title: obrigatorio, max 255 chars
+- description: opcional, max 2000 chars
+- is_active: boolean
+- sort_order: integer
+
+**learning_contents:**
+- module_id: UUID obrigatorio
+- title: obrigatorio, max 255 chars
+- description: opcional, max 2000 chars
+- content_type: 'video' ou 'text'
+- video_url: URL opcional
+- text_content: texto opcional
+- duration_minutes: integer opcional
+- is_active: boolean
+- sort_order: integer
+
+**media_categories:**
+- name: obrigatorio, max 100 chars, unico
+- display_name: obrigatorio, max 255 chars
+- type: 'photo', 'video' ou 'file'
+- description: opcional, max 1000 chars
+- cover_url: URL opcional
+- is_active: boolean
+- sort_order: integer
+
+**media_items:**
+- category_id: UUID obrigatorio
+- title: obrigatorio, max 255 chars
+- description: opcional, max 1000 chars
+- file_url: URL obrigatoria, max 1000 chars
+- thumbnail_url: URL opcional
+- file_type: extensao obrigatoria (jpg, png, mp4, pdf, etc)
+- file_size: integer opcional
+- media_type: 'photo', 'video' ou 'file'
+- dimensions: JSONB opcional {width, height}
+- duration_seconds: integer opcional
+- is_active: boolean
+- sort_order: integer
+- created_by: UUID opcional
+
+### 1.6 Atualizar getConflictColumn
+
+```typescript
+case "learning_tracks":
+  return "id";
+case "learning_modules":
+  return "id";
+case "learning_contents":
+  return "id";
+case "media_categories":
+  return "name";  // unique
+case "media_items":
+  return "id";
+```
+
+### 1.7 Permitir DELETE nas Novas Tabelas (Opcional)
+
+Adicionar ao array `deletableTables`:
+```typescript
+const deletableTables: TableName[] = [
+  "documents", "support_tickets", "support_messages", "user_roles",
+  "learning_tracks", "learning_modules", "learning_contents",
+  "media_categories", "media_items"
+];
+```
 
 ---
 
-### 3. Protecao do Modelo de Comissoes
+## Fase 2: Ajustes na Documentacao
 
-**Objetivo:** Ocultar detalhes de calculo, mostrando apenas valores finais
+### 2.1 Verificar Versao
 
-**Abordagem: View Filtrada para Usuarios**
+Confirmar que o changelog v2.1 esta correto apos implementacao.
 
-**Campos a Ocultar de Usuarios Normais:**
-- `commission_rate` - Taxa percentual
-- `base_revenue` - Receita base
-- `bonus_value` - Valor de bonus (manter separado)
-- `tier_name` - Nome do tier (revelar parcialmente)
+### 2.2 Adicionar Exemplos de Uso
 
-**Campos Visiveis:**
-- `reference_month` - Mes de referencia
-- `client_count` - Quantidade de clientes
-- `total_value` - Valor total da comissao
-- `status` - Status do pagamento
-- `paid_at` - Data de pagamento
+Adicionar exemplos curl para as novas tabelas:
 
-**Implementacao:**
+```bash
+# Criar trilha de aprendizado
+curl -X POST '...' -d '{
+  "action": "insert",
+  "table": "learning_tracks",
+  "data": {
+    "title": "Introducao ao Programa",
+    "description": "...",
+    "is_active": true,
+    "is_featured": true
+  }
+}'
 
-1. Criar view `commission_history_user` com campos filtrados
-2. Atualizar hook `useCommissions` para usar view
-3. Manter acesso completo para admins via tabela original
+# Buscar itens de midia por categoria
+curl -X POST '...' -d '{
+  "action": "get",
+  "table": "media_items",
+  "filters": {
+    "category_id": "uuid",
+    "media_type": "photo",
+    "is_active": true
+  }
+}'
+```
+
+### 2.3 Atualizar Lista de Filtros
+
+Adicionar novos filtros a tabela de filtros:
+
+| Filtro | Tipo | Descricao | Tabelas |
+|--------|------|-----------|---------|
+| track_id | UUID | Filtrar por trilha | learning_modules |
+| module_id | UUID | Filtrar por modulo | learning_contents |
+| category_id | UUID | Filtrar por categoria | media_items |
+| type | string | Tipo de midia | media_categories |
+| media_type | string | Tipo do item | media_items |
+| is_featured | boolean | Destaque | learning_tracks |
+
+### 2.4 Atualizar Tabela de Delete
+
+Adicionar as novas tabelas permitidas para exclusao.
 
 ---
 
-### 4. Atualizacao da Documentacao do Webhook
-
-**Status Atual:** O webhook ja esta bem implementado com:
-- Validacao de secret obrigatoria
-- HMAC opcional com protecao contra replay
-- Auditoria completa
-- Validacao de inputs
-
-**Acao:** Atualizar finding para "ignored" com justificativa detalhada
-
----
-
-## Arquivos a Criar/Modificar
-
-### Novos Arquivos
-
-| Arquivo | Descricao |
-|---------|-----------|
-| Migration SQL | Views seguras e funcoes de auditoria |
-
-### Arquivos a Modificar
+## Arquivos a Modificar
 
 | Arquivo | Alteracao |
 |---------|-----------|
-| `src/hooks/useCommissions.tsx` | Usar view filtrada |
-| `src/hooks/useLeads.tsx` | Adicionar logging de acesso |
+| `supabase/functions/n8n-webhook/index.ts` | Adicionar 5 tabelas e validacoes |
+| `docs/WEBHOOK_DOCUMENTATION.md` | Adicionar exemplos e ajustes menores |
 
 ---
 
-## Detalhes Tecnicos
+## Estimativa
 
-### Migration SQL
-
-```sql
--- 1. View segura para commission_history (usuarios veem apenas totais)
-CREATE VIEW commission_history_user AS
-SELECT 
-  id,
-  user_id,
-  reference_month,
-  client_count,
-  total_value,
-  status,
-  calculated_at,
-  paid_at,
-  created_at,
-  updated_at
-FROM commission_history;
-
--- 2. Politica: Usuarios acessam via view, admins via tabela original
--- (RLS na view herda da tabela base com security_invoker)
-
--- 3. Funcao de auditoria para acessos sensiveis
-CREATE OR REPLACE FUNCTION log_sensitive_data_access(
-  _table_name text,
-  _record_count integer,
-  _query_type text DEFAULT 'select'
-)
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  INSERT INTO admin_data_access_log (
-    admin_user_id,
-    action,
-    table_accessed,
-    details
-  ) VALUES (
-    auth.uid(),
-    _query_type,
-    _table_name,
-    jsonb_build_object(
-      'record_count', _record_count,
-      'accessed_at', now(),
-      'source', 'client_query'
-    )
-  );
-END;
-$$;
-
--- 4. Indice para detectar acessos em massa
-CREATE INDEX idx_access_log_user_time 
-ON admin_data_access_log(admin_user_id, accessed_at DESC);
-```
+- Edge Function: ~200 linhas de codigo adicional
+- Documentacao: Exemplos e ajustes menores
 
 ---
 
-## Ordem de Implementacao
+## Testes
 
-### Fase 1: Protecao de Comissoes (Baixo Risco)
-1. Criar view `commission_history_user`
-2. Atualizar hook `useCommissions` para usar view
-3. Testar que admins ainda veem dados completos
+Apos implementacao, testar:
 
-### Fase 2: Auditoria de Acessos
-1. Adicionar funcao de log de acessos sensiveis
-2. Criar indice para deteccao de padroes
-3. Implementar logging no hook `useLeads`
-
-### Fase 3: Atualizacao de Findings
-1. Marcar finding do webhook como "ignored" com justificativa
-2. Marcar finding de admin client-side como "ignored" (ja esta)
-
----
-
-## Consideracoes de Seguranca
-
-1. **Principio do Menor Privilegio:** Usuarios veem apenas dados necessarios
-2. **Auditoria:** Todos os acessos a dados sensiveis sao registrados
-3. **Defense in Depth:** Multiplas camadas de protecao (RLS + Views + Auditoria)
-4. **Sem Breaking Changes:** Views sao transparentes para o frontend
+1. GET em learning_tracks com filtros
+2. INSERT em learning_modules com track_id
+3. GET em media_items por category_id
+4. UPDATE em media_categories
+5. DELETE em learning_contents
 
 ---
 
@@ -243,11 +256,6 @@ ON admin_data_access_log(admin_user_id, accessed_at DESC);
 
 Apos implementacao:
 
-| Finding | Status |
-|---------|--------|
-| User Personal Information | Resolvido (auditoria + campos protegidos) |
-| Customer Emails Harvested | Resolvido (auditoria + rate awareness) |
-| Admin Client-Side | Ignorado (corretamente implementado) |
-| Webhook Service Role | Ignorado (corretamente implementado) |
-| Commission Calculations | Resolvido (view filtrada) |
-
+- 16 tabelas suportadas (documentacao e codigo consistentes)
+- Sistema de Materiais de Apoio totalmente integravel via n8n
+- Documentacao v2.1 100% precisa
