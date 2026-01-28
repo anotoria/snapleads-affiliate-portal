@@ -1,125 +1,41 @@
 
-
-# Plano: Desabilitar Acesso a Documentos no Menu
+# Plano: Ajustar Background do Logo no Tema Escuro
 
 ## Resumo
 
-Adicionar marcação "Em Breve" no item de menu Documentos em todas as línguas (EN, PT, ES) e bloquear o acesso direto, deixando o item em modo read-only com cor cinza claro.
+Alterar o background do header da sidebar (onde fica o logotipo) de `white/10` para `white/70` no tema escuro, aplicando a cor mais clara conforme validado.
 
 ---
 
 ## Alterações a Implementar
 
-### 1. Adicionar Traduções
+### Arquivos a Modificar
 
-**Arquivo:** `src/i18n/translations.ts`
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/components/layout/AppSidebar.tsx` | Mudar `dark:bg-white/10` para `dark:bg-white/70` |
+| `src/components/admin/AdminSidebar.tsx` | Mudar `dark:bg-white/10` para `dark:bg-white/70` |
 
-Adicionar nova chave `comingSoon` no tipo `CommonTranslations` e nas traduções de cada idioma:
+### Código Atual vs Novo
 
-| Idioma | Chave | Valor |
-|--------|-------|-------|
-| EN | `common.comingSoon` | "Coming Soon" |
-| PT | `common.comingSoon` | "Em Breve" |
-| ES | `common.comingSoon` | "Próximamente" |
-
-### 2. Modificar Sidebar do Afiliado
-
-**Arquivo:** `src/components/layout/AppSidebar.tsx`
-
-Alterações:
-- Adicionar propriedade `disabled` aos itens de navegação
-- Marcar o item "documents" como `disabled: true`
-- Renderização condicional:
-  - Se `disabled`: mostrar um `<div>` não-clicável ao invés de `<NavLink>`
-  - Aplicar classes de estilo cinza: `text-muted-foreground/50 cursor-not-allowed`
-  - Adicionar Badge "Em Breve" ao lado do título
-
-**Estrutura do navItem:**
-```typescript
-interface NavItem {
-  title: string;
-  url: string;
-  icon: LucideIcon;
-  disabled?: boolean;
-}
+**Antes:**
+```tsx
+<SidebarHeader className="... dark:bg-white/10 ...">
 ```
 
-**Renderização condicional:**
+**Depois:**
 ```tsx
-{item.disabled ? (
-  <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-muted-foreground/50 cursor-not-allowed">
-    <item.icon className="h-5 w-5 shrink-0" />
-    {!collapsed && (
-      <span className="flex items-center gap-2">
-        {item.title}
-        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-          {t.common.comingSoon}
-        </Badge>
-      </span>
-    )}
-  </div>
-) : (
-  <NavLink ... />
-)}
+<SidebarHeader className="... dark:bg-white/70 ...">
 ```
 
 ---
 
 ## Resultado Visual
 
-| Estado | Aparência |
-|--------|-----------|
-| Normal | Item cinza claro, não-clicável |
-| Hover | Sem efeito de hover (cursor not-allowed) |
-| Badge | "Em Breve" / "Coming Soon" / "Próximamente" |
-| Collapsed | Apenas ícone cinza (sem badge) |
+| Tema | Background | Cor Aproximada |
+|------|------------|----------------|
+| Claro | Sem background especial | Branco padrão |
+| Escuro (antes) | `white/10` | ~#2a2530 |
+| Escuro (depois) | `white/70` | ~#c5bfcb |
 
----
-
-## Arquivos Modificados
-
-| Arquivo | Alteração |
-|---------|-----------|
-| `src/i18n/translations.ts` | Adicionar `comingSoon` em EN, PT, ES |
-| `src/components/layout/AppSidebar.tsx` | Lógica de item desabilitado + badge |
-
----
-
-## Detalhes Técnicos
-
-### Tipo TypeScript Atualizado
-
-```typescript
-// CommonTranslations
-type CommonTranslations = {
-  // ... existing
-  comingSoon: string;
-};
-```
-
-### NavItem com disabled
-
-```typescript
-const navItems = [
-  { title: t.nav.dashboard, url: "/", icon: LayoutDashboard },
-  // ... outros
-  { title: t.nav.documents, url: "/documents", icon: FolderOpen, disabled: true },
-  // ... resto
-];
-```
-
-### Importação do Badge
-
-```typescript
-import { Badge } from "@/components/ui/badge";
-```
-
----
-
-## Considerações
-
-- A rota `/documents` continua existindo no App.tsx
-- Se o usuário tentar acessar diretamente via URL, a página ainda abrirá
-- Para bloquear acesso completo via URL, podemos adicionar um redirect na página Documents.tsx (opcional)
-- A abordagem atual bloqueia apenas via menu, mantendo flexibilidade para admins
-
+A nova cor é um lilac-gray claro que mantém harmonia com a paleta purple da marca enquanto oferece contraste adequado para o logotipo.
