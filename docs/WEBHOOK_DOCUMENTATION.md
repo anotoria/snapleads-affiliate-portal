@@ -1,8 +1,8 @@
-# SnapLeads Portal de Afiliados - Documentação do Webhook n8n v2.0
+# SnapLeads Portal de Afiliados - Documentação do Webhook n8n v2.1
 
 ## Visão Geral
 
-O webhook `n8n-webhook` é uma Edge Function do Supabase que permite integração externa com o sistema SnapLeads. Ele possibilita operações CRUD e ações especiais em 11 tabelas do sistema.
+O webhook `n8n-webhook` é uma Edge Function do Supabase que permite integração externa com o sistema SnapLeads. Ele possibilita operações CRUD e ações especiais em 16 tabelas do sistema.
 
 ### Tabelas Suportadas
 
@@ -102,7 +102,7 @@ POST https://fgrgyblddyiswdsbjrcl.supabase.co/functions/v1/n8n-webhook
 ```json
 {
   "action": "insert | update | upsert | get | delete | calculate_tier | calculate_commission | deactivate_user | activate_user | reset_password | get_admin_summary",
-  "table": "users | profiles | leads | payouts | tiers | pricing_tiers | commission_history | documents | support_tickets | support_messages | user_roles",
+  "table": "users | profiles | leads | payouts | tiers | pricing_tiers | commission_history | documents | support_tickets | support_messages | user_roles | learning_tracks | learning_modules | learning_contents | media_categories | media_items",
   "data": { ... },
   "match": { ... },
   "filters": { ... }
@@ -1577,12 +1577,18 @@ Todos os filtros são opcionais para a ação `get`:
 |--------|------|-----------|---------|
 | `user_id` | UUID | Filtrar por ID do usuário | Todas |
 | `status` | string | Filtrar por status | leads, payouts, tickets, commissions |
-| `is_active` | boolean | Filtrar por status ativo | profiles, users, tiers, pricing_tiers |
+| `is_active` | boolean | Filtrar por status ativo | profiles, users, tiers, pricing_tiers, learning_*, media_* |
 | `tier_level` | string | Filtrar por nível | profiles, users |
 | `category` | string | Filtrar por categoria | documents, tickets |
 | `priority` | string | Filtrar por prioridade | tickets |
 | `ticket_id` | UUID | Filtrar por ticket (obrigatório para messages) | support_messages |
 | `reference_month` | string | Filtrar por mês (YYYY-MM) | commission_history |
+| `track_id` | UUID | Filtrar por trilha | learning_modules |
+| `module_id` | UUID | Filtrar por módulo | learning_contents |
+| `category_id` | UUID | Filtrar por categoria de mídia | media_items |
+| `type` | string | Filtrar por tipo (photo/video/file) | media_categories |
+| `media_type` | string | Filtrar por tipo de mídia | media_items |
+| `is_featured` | boolean | Filtrar por destaque | learning_tracks |
 | `created_after` | timestamp | Data mínima de criação | Todas |
 | `created_before` | timestamp | Data máxima de criação | Todas |
 | `limit` | number | Limite de resultados (padrão: 100, máx: 1000) | Todas |
@@ -1881,6 +1887,11 @@ Apenas algumas tabelas permitem exclusão via webhook:
 | `support_tickets` | ✅ Sim |
 | `support_messages` | ✅ Sim |
 | `user_roles` | ✅ Sim |
+| `learning_tracks` | ✅ Sim |
+| `learning_modules` | ✅ Sim |
+| `learning_contents` | ✅ Sim |
+| `media_categories` | ✅ Sim |
+| `media_items` | ✅ Sim |
 | `users` | ❌ Não |
 | `profiles` | ❌ Não |
 | `leads` | ❌ Não |
