@@ -10,7 +10,10 @@ export interface TierFormData {
   name: string;
   display_name: string;
   min_revenue: number;
-  client_count: number;
+  min_client_count: number;
+  next_level_client_count: number | null;
+  is_unlimited: boolean;
+  client_count: number; // Mantido para compatibilidade
   commission_percentage: number;
   bonus_amount: number;
   color: string;

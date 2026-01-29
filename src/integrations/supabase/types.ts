@@ -726,9 +726,12 @@ export type Database = {
           icon: string | null
           id: string
           is_active: boolean
+          is_unlimited: boolean
           max_revenue: number | null
+          min_client_count: number
           min_revenue: number
           name: string
+          next_level_client_count: number | null
           sort_order: number
           updated_at: string
         }
@@ -742,9 +745,12 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          is_unlimited?: boolean
           max_revenue?: number | null
+          min_client_count?: number
           min_revenue?: number
           name: string
+          next_level_client_count?: number | null
           sort_order?: number
           updated_at?: string
         }
@@ -758,9 +764,12 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          is_unlimited?: boolean
           max_revenue?: number | null
+          min_client_count?: number
           min_revenue?: number
           name?: string
+          next_level_client_count?: number | null
           sort_order?: number
           updated_at?: string
         }
