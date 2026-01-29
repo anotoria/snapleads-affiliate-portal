@@ -717,6 +717,7 @@ export type Database = {
       }
       tiers: {
         Row: {
+          benefits: string | null
           bonus_amount: number
           client_count: number
           color: string
@@ -732,10 +733,12 @@ export type Database = {
           min_revenue: number
           name: string
           next_level_client_count: number | null
+          requirements: string | null
           sort_order: number
           updated_at: string
         }
         Insert: {
+          benefits?: string | null
           bonus_amount?: number
           client_count?: number
           color: string
@@ -751,10 +754,12 @@ export type Database = {
           min_revenue?: number
           name: string
           next_level_client_count?: number | null
+          requirements?: string | null
           sort_order?: number
           updated_at?: string
         }
         Update: {
+          benefits?: string | null
           bonus_amount?: number
           client_count?: number
           color?: string
@@ -770,6 +775,7 @@ export type Database = {
           min_revenue?: number
           name?: string
           next_level_client_count?: number | null
+          requirements?: string | null
           sort_order?: number
           updated_at?: string
         }

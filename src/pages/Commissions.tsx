@@ -48,6 +48,7 @@ const Commissions = () => {
     commission: number;
     bonus: number;
     total: number;
+    isElite: boolean;
   } | null>(null);
 
   // Calcula faturamento automaticamente quando leads mudam
@@ -76,15 +77,19 @@ const Commissions = () => {
       }
     }
 
+    // Verificar se é Elite (20+ leads)
+    const isElite = leadsCount >= 20;
+
     const commission = revenue * (selectedTier.commission_percentage / 100);
     setSimulatorResult({
-      tier: selectedTier.display_name,
-      tierColor: selectedTier.color,
+      tier: isElite ? "Elite" : selectedTier.display_name,
+      tierColor: isElite ? "#9b59b6" : selectedTier.color,
       commissionRate: selectedTier.commission_percentage,
       revenue,
       commission,
       bonus: selectedTier.bonus_amount,
       total: commission + selectedTier.bonus_amount,
+      isElite,
     });
   };
 
@@ -173,6 +178,7 @@ const Commissions = () => {
                 ) : (
                   tiers?.map((tier) => {
                     const TierIcon = tierIcons[tier.icon || "award"] || Award;
+                    const tierData = tier as any;
                     return (
                       <Card 
                         key={tier.id} 
@@ -205,7 +211,7 @@ const Commissions = () => {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <div className="space-y-2 text-sm">
+                          <div className="space-y-3 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Faturamento:</span>
                               <span className="font-medium">
@@ -218,6 +224,22 @@ const Commissions = () => {
                                 <span className="font-medium text-success">
                                   {formatCurrency(tier.bonus_amount)}
                                 </span>
+                              </div>
+                            )}
+                            
+                            {/* Requisitos */}
+                            {tierData.requirements && (
+                              <div className="pt-2 border-t">
+                                <p className="text-xs font-medium text-muted-foreground mb-1">📋 Requisitos:</p>
+                                <p className="text-xs whitespace-pre-line">{tierData.requirements}</p>
+                              </div>
+                            )}
+                            
+                            {/* Vantagens */}
+                            {tierData.benefits && (
+                              <div className="pt-2 border-t">
+                                <p className="text-xs font-medium text-muted-foreground mb-1">✨ Vantagens:</p>
+                                <p className="text-xs whitespace-pre-line">{tierData.benefits}</p>
                               </div>
                             )}
                           </div>
@@ -346,6 +368,13 @@ const Commissions = () => {
                               >
                                 {simulatorResult.commissionRate}% comissão
                               </Badge>
+                              {simulatorResult.isElite && (
+                                <div className="mt-2">
+                                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
+                                    🌟 Potencial Embaixador
+                                  </Badge>
+                                </div>
+                              )}
                             </div>
                             <div className="space-y-3">
                               <div className="flex justify-between items-center">
