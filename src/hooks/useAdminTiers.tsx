@@ -19,6 +19,8 @@ export interface TierFormData {
   color: string;
   sort_order: number;
   is_active: boolean;
+  requirements: string | null;
+  benefits: string | null;
 }
 
 export const useAdminTiers = () => {

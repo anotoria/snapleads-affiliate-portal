@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -47,6 +48,8 @@ const AdminTiers = () => {
     color: "#6B7280",
     sort_order: 0,
     is_active: true,
+    requirements: null,
+    benefits: null,
   });
 
   // Valor base do plano (buscar de sa_commission_settings ou usar padrão)
@@ -87,6 +90,8 @@ const AdminTiers = () => {
       color: "#6B7280",
       sort_order: tiers.length,
       is_active: true,
+      requirements: null,
+      benefits: null,
     });
     setIsDialogOpen(true);
   };
@@ -107,6 +112,8 @@ const AdminTiers = () => {
       color: tier.color,
       sort_order: tier.sort_order,
       is_active: tier.is_active,
+      requirements: tierData.requirements ?? null,
+      benefits: tierData.benefits ?? null,
     });
     setIsDialogOpen(true);
   };
@@ -432,6 +439,34 @@ const AdminTiers = () => {
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 />
                 <Label>Ativo</Label>
+              </div>
+
+              {/* Requisitos */}
+              <div className="space-y-2">
+                <Label>Requisitos</Label>
+                <Textarea
+                  value={formData.requirements || ""}
+                  onChange={(e) => setFormData({ ...formData, requirements: e.target.value || null })}
+                  placeholder="Ex: Mínimo de 5 leads ativos por mês, Faturamento recorrente acima de R$ 10.000"
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Descreva os requisitos para alcançar este nível
+                </p>
+              </div>
+
+              {/* Vantagens */}
+              <div className="space-y-2">
+                <Label>Vantagens</Label>
+                <Textarea
+                  value={formData.benefits || ""}
+                  onChange={(e) => setFormData({ ...formData, benefits: e.target.value || null })}
+                  placeholder="Ex: Comissão de 10%, Bônus de R$ 5.000, Acesso a materiais exclusivos"
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Descreva as vantagens e benefícios deste nível
+                </p>
               </div>
             </div>
             <DialogFooter>
