@@ -503,6 +503,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean
+          managed_by: string | null
           must_change_password: boolean
           phone: string | null
           tier_level: string
@@ -520,6 +521,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean
+          managed_by?: string | null
           must_change_password?: boolean
           phone?: string | null
           tier_level?: string
@@ -537,6 +539,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean
+          managed_by?: string | null
           must_change_password?: boolean
           phone?: string | null
           tier_level?: string
