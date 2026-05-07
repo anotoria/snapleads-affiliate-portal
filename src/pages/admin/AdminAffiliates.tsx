@@ -240,6 +240,13 @@ const AdminAffiliates = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
+                            {affiliate.manager_name ? (
+                              <span className="text-sm">{affiliate.manager_name}</span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">— Sem gestor</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
                             <Badge variant={affiliate.is_active ? "default" : "secondary"}>
                               {affiliate.is_active ? "Ativo" : "Inativo"}
                             </Badge>
