@@ -117,6 +117,7 @@ export const useAdminAffiliates = () => {
         company_name: string;
         phone: string;
         cnpj: string;
+        managed_by: string | null;
       }>;
     }) => {
       const { error } = await supabase
