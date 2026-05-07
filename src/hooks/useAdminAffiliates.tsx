@@ -93,10 +93,8 @@ export const useAdminAffiliates = () => {
         cnpj: profile.cnpj,
         affiliate_code: profile.affiliate_code,
         created_at: profile.created_at,
-        managed_by: (profile as { managed_by: string | null }).managed_by ?? null,
-        manager_name: (profile as { managed_by: string | null }).managed_by
-          ? profileNameByUserId[(profile as { managed_by: string }).managed_by] ?? null
-          : null,
+        managed_by: profile.managed_by,
+        manager_name: profile.managed_by ? profileNameByUserId[profile.managed_by] ?? null : null,
         leadsCount: leadsCountByUser[profile.user_id] || 0,
         pendingAmount: pendingByUser[profile.user_id] || 0,
       }));
