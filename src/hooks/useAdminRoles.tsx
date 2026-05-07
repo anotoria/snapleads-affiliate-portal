@@ -14,7 +14,7 @@ export interface AdminUser {
 }
 
 export const useAdminRoles = () => {
-  const { isSuperAdmin } = useAdminAccess();
+  const { isAdmin, isSuperAdmin } = useAdminAccess();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
