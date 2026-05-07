@@ -205,6 +205,35 @@ export const AffiliateFormDialog = ({
 
             <FormField
               control={form.control}
+              name="managed_by"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gestor Responsável</FormLabel>
+                  <Select
+                    onValueChange={(v) => field.onChange(v === NO_MANAGER ? null : v)}
+                    value={field.value ?? NO_MANAGER}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um gestor" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={NO_MANAGER}>— Sem gestor</SelectItem>
+                      {admins.map((admin) => (
+                        <SelectItem key={admin.user_id} value={admin.user_id}>
+                          {admin.full_name || "Sem nome"} ({admin.role === "super_admin" ? "Super Admin" : "Admin"})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="is_active"
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-4">
