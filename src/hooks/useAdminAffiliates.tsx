@@ -15,6 +15,8 @@ export interface AffiliateWithStats {
   cnpj: string | null;
   affiliate_code: string | null;
   created_at: string;
+  managed_by: string | null;
+  manager_name: string | null;
   leadsCount: number;
   pendingAmount: number;
 }
