@@ -205,6 +205,7 @@ const AdminAffiliates = () => {
                     <TableRow>
                       <TableHead>Nome / Empresa</TableHead>
                       <TableHead>{t.admin.tier}</TableHead>
+                      <TableHead>Gestor</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-center">{t.admin.leadsCount}</TableHead>
                       <TableHead className="text-right">{t.admin.pendingAmount}</TableHead>
@@ -215,7 +216,7 @@ const AdminAffiliates = () => {
                   <TableBody>
                     {filteredAffiliates.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           Nenhum afiliado encontrado
                         </TableCell>
                       </TableRow>
