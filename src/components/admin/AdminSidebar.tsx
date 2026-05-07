@@ -8,7 +8,8 @@ import {
   ArrowLeft,
   Wallet,
   BookOpen,
-  ImageIcon
+  ImageIcon,
+  Briefcase
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
