@@ -31,6 +31,10 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Loader2 } from "lucide-react";
 import type { AffiliateWithStats } from "@/hooks/useAdminAffiliates";
 
+import { useAdminRoles } from "@/hooks/useAdminRoles";
+
+const NO_MANAGER = "__none__";
+
 const affiliateFormSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   company_name: z.string().optional(),
@@ -38,6 +42,7 @@ const affiliateFormSchema = z.object({
   cnpj: z.string().optional(),
   tier_level: z.string(),
   is_active: z.boolean(),
+  managed_by: z.string().nullable().optional(),
 });
 
 type AffiliateFormValues = z.infer<typeof affiliateFormSchema>;
@@ -66,6 +71,7 @@ export const AffiliateFormDialog = ({
   isSubmitting,
 }: AffiliateFormDialogProps) => {
   const { t } = useLanguage();
+  const { admins } = useAdminRoles();
 
   const form = useForm<AffiliateFormValues>({
     resolver: zodResolver(affiliateFormSchema),
