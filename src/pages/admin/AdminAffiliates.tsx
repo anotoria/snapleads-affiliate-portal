@@ -165,6 +165,20 @@ const AdminAffiliates = () => {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={managerFilter} onValueChange={setManagerFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Gestor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos Gestores</SelectItem>
+                  <SelectItem value="none">Sem gestor</SelectItem>
+                  {uniqueManagers.map(([id, name]) => (
+                    <SelectItem key={id} value={id}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
