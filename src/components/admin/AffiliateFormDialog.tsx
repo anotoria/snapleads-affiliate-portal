@@ -82,6 +82,7 @@ export const AffiliateFormDialog = ({
       cnpj: "",
       tier_level: "silver",
       is_active: true,
+      managed_by: null,
     },
   });
 
@@ -94,13 +95,17 @@ export const AffiliateFormDialog = ({
         cnpj: affiliate.cnpj || "",
         tier_level: affiliate.tier_level,
         is_active: affiliate.is_active,
+        managed_by: affiliate.managed_by ?? null,
       });
     }
   }, [affiliate, form, open]);
 
   const handleSubmit = (values: AffiliateFormValues) => {
     if (affiliate) {
-      onSubmit(affiliate.user_id, values);
+      onSubmit(affiliate.user_id, {
+        ...values,
+        managed_by: values.managed_by === NO_MANAGER ? null : values.managed_by ?? null,
+      });
       onOpenChange(false);
     }
   };
