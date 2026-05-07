@@ -53,6 +53,7 @@ const AdminAffiliates = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [tierFilter, setTierFilter] = useState<string>("all");
+  const [managerFilter, setManagerFilter] = useState<string>("all");
   
   // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -80,10 +81,22 @@ const AdminAffiliates = () => {
 
     const matchesTier = tierFilter === "all" || affiliate.tier_level === tierFilter;
 
-    return matchesSearch && matchesStatus && matchesTier;
+    const matchesManager =
+      managerFilter === "all" ||
+      (managerFilter === "none" && !affiliate.managed_by) ||
+      affiliate.managed_by === managerFilter;
+
+    return matchesSearch && matchesStatus && matchesTier && matchesManager;
   });
 
   const uniqueTiers = [...new Set(affiliates.map((a) => a.tier_level))];
+  const uniqueManagers = Array.from(
+    new Map(
+      affiliates
+        .filter((a) => a.managed_by && a.manager_name)
+        .map((a) => [a.managed_by!, a.manager_name!])
+    ).entries()
+  );
 
   const handleEditClick = (affiliate: AffiliateWithStats) => {
     setSelectedAffiliate(affiliate);
