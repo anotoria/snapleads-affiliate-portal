@@ -28,6 +28,7 @@ import MediaCategory from "./pages/MediaCategory";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
+import AdminMyAffiliates from "./pages/admin/AdminMyAffiliates";
 import AdminTiers from "./pages/admin/AdminTiers";
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminSupport from "./pages/admin/AdminSupport";
