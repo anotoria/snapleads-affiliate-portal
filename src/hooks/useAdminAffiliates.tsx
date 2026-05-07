@@ -15,6 +15,8 @@ export interface AffiliateWithStats {
   cnpj: string | null;
   affiliate_code: string | null;
   created_at: string;
+  managed_by: string | null;
+  manager_name: string | null;
   leadsCount: number;
   pendingAmount: number;
 }
@@ -73,18 +75,26 @@ export const useAdminAffiliates = () => {
           (pendingByUser[payout.user_id] || 0) + Number(payout.amount);
       });
 
+      // Build manager name lookup from profiles
+      const profileNameByUserId: Record<string, string | null> = {};
+      profiles?.forEach((p) => {
+        profileNameByUserId[p.user_id] = p.full_name;
+      });
+
       return (profiles || []).map((profile) => ({
         id: profile.id,
         user_id: profile.user_id,
         full_name: profile.full_name,
         company_name: profile.company_name,
-        email: "", // Email will be fetched separately if needed
+        email: "",
         tier_level: profile.tier_level,
         is_active: profile.is_active,
         phone: profile.phone,
         cnpj: profile.cnpj,
         affiliate_code: profile.affiliate_code,
         created_at: profile.created_at,
+        managed_by: profile.managed_by,
+        manager_name: profile.managed_by ? profileNameByUserId[profile.managed_by] ?? null : null,
         leadsCount: leadsCountByUser[profile.user_id] || 0,
         pendingAmount: pendingByUser[profile.user_id] || 0,
       }));
@@ -105,6 +115,7 @@ export const useAdminAffiliates = () => {
         company_name: string;
         phone: string;
         cnpj: string;
+        managed_by: string | null;
       }>;
     }) => {
       const { error } = await supabase

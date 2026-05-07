@@ -28,6 +28,7 @@ import MediaCategory from "./pages/MediaCategory";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
+import AdminMyAffiliates from "./pages/admin/AdminMyAffiliates";
 import AdminTiers from "./pages/admin/AdminTiers";
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminSupport from "./pages/admin/AdminSupport";
@@ -74,6 +75,7 @@ const App = () => (
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/affiliates" element={<AdminAffiliates />} />
+                <Route path="/admin/my-affiliates" element={<AdminMyAffiliates />} />
                 <Route path="/admin/tiers" element={<AdminTiers />} />
                 <Route path="/admin/pricing" element={<AdminPricing />} />
                 <Route path="/admin/support" element={<AdminSupport />} />

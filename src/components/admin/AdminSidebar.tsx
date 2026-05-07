@@ -8,7 +8,8 @@ import {
   ArrowLeft,
   Wallet,
   BookOpen,
-  ImageIcon
+  ImageIcon,
+  Briefcase
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
@@ -40,6 +41,7 @@ export const AdminSidebar = () => {
   const navItems = [
     { title: t.nav.adminDashboard, url: "/admin", icon: LayoutDashboard },
     { title: t.nav.adminUsers, url: "/admin/affiliates", icon: Users },
+    { title: "Minha Carteira", url: "/admin/my-affiliates", icon: Briefcase },
     { title: t.nav.adminTiers, url: "/admin/tiers", icon: Award },
     { title: t.nav.adminPricing, url: "/admin/pricing", icon: DollarSign },
     { title: t.nav.adminTracks, url: "/admin/tracks", icon: BookOpen },

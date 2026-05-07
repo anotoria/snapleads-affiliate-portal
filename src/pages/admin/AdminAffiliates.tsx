@@ -53,6 +53,7 @@ const AdminAffiliates = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [tierFilter, setTierFilter] = useState<string>("all");
+  const [managerFilter, setManagerFilter] = useState<string>("all");
   
   // Dialog states
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -80,10 +81,22 @@ const AdminAffiliates = () => {
 
     const matchesTier = tierFilter === "all" || affiliate.tier_level === tierFilter;
 
-    return matchesSearch && matchesStatus && matchesTier;
+    const matchesManager =
+      managerFilter === "all" ||
+      (managerFilter === "none" && !affiliate.managed_by) ||
+      affiliate.managed_by === managerFilter;
+
+    return matchesSearch && matchesStatus && matchesTier && matchesManager;
   });
 
   const uniqueTiers = [...new Set(affiliates.map((a) => a.tier_level))];
+  const uniqueManagers = Array.from(
+    new Map(
+      affiliates
+        .filter((a) => a.managed_by && a.manager_name)
+        .map((a) => [a.managed_by!, a.manager_name!])
+    ).entries()
+  );
 
   const handleEditClick = (affiliate: AffiliateWithStats) => {
     setSelectedAffiliate(affiliate);
@@ -152,6 +165,20 @@ const AdminAffiliates = () => {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={managerFilter} onValueChange={setManagerFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Gestor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos Gestores</SelectItem>
+                  <SelectItem value="none">Sem gestor</SelectItem>
+                  {uniqueManagers.map(([id, name]) => (
+                    <SelectItem key={id} value={id}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -178,6 +205,7 @@ const AdminAffiliates = () => {
                     <TableRow>
                       <TableHead>Nome / Empresa</TableHead>
                       <TableHead>{t.admin.tier}</TableHead>
+                      <TableHead>Gestor</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-center">{t.admin.leadsCount}</TableHead>
                       <TableHead className="text-right">{t.admin.pendingAmount}</TableHead>
@@ -188,7 +216,7 @@ const AdminAffiliates = () => {
                   <TableBody>
                     {filteredAffiliates.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           Nenhum afiliado encontrado
                         </TableCell>
                       </TableRow>
@@ -210,6 +238,13 @@ const AdminAffiliates = () => {
                             >
                               {affiliate.tier_level.charAt(0).toUpperCase() + affiliate.tier_level.slice(1)}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {affiliate.manager_name ? (
+                              <span className="text-sm">{affiliate.manager_name}</span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">— Sem gestor</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Badge variant={affiliate.is_active ? "default" : "secondary"}>

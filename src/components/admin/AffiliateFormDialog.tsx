@@ -31,6 +31,10 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { Loader2 } from "lucide-react";
 import type { AffiliateWithStats } from "@/hooks/useAdminAffiliates";
 
+import { useAdminRoles } from "@/hooks/useAdminRoles";
+
+const NO_MANAGER = "__none__";
+
 const affiliateFormSchema = z.object({
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   company_name: z.string().optional(),
@@ -38,6 +42,7 @@ const affiliateFormSchema = z.object({
   cnpj: z.string().optional(),
   tier_level: z.string(),
   is_active: z.boolean(),
+  managed_by: z.string().nullable().optional(),
 });
 
 type AffiliateFormValues = z.infer<typeof affiliateFormSchema>;
@@ -66,6 +71,7 @@ export const AffiliateFormDialog = ({
   isSubmitting,
 }: AffiliateFormDialogProps) => {
   const { t } = useLanguage();
+  const { admins } = useAdminRoles();
 
   const form = useForm<AffiliateFormValues>({
     resolver: zodResolver(affiliateFormSchema),
@@ -76,6 +82,7 @@ export const AffiliateFormDialog = ({
       cnpj: "",
       tier_level: "silver",
       is_active: true,
+      managed_by: null,
     },
   });
 
@@ -88,13 +95,17 @@ export const AffiliateFormDialog = ({
         cnpj: affiliate.cnpj || "",
         tier_level: affiliate.tier_level,
         is_active: affiliate.is_active,
+        managed_by: affiliate.managed_by ?? null,
       });
     }
   }, [affiliate, form, open]);
 
   const handleSubmit = (values: AffiliateFormValues) => {
     if (affiliate) {
-      onSubmit(affiliate.user_id, values);
+      onSubmit(affiliate.user_id, {
+        ...values,
+        managed_by: values.managed_by === NO_MANAGER ? null : values.managed_by ?? null,
+      });
       onOpenChange(false);
     }
   };
@@ -183,6 +194,35 @@ export const AffiliateFormDialog = ({
                       {tiers.map((tier) => (
                         <SelectItem key={tier.id} value={tier.name}>
                           {tier.display_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="managed_by"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gestor Responsável</FormLabel>
+                  <Select
+                    onValueChange={(v) => field.onChange(v === NO_MANAGER ? null : v)}
+                    value={field.value ?? NO_MANAGER}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um gestor" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={NO_MANAGER}>— Sem gestor</SelectItem>
+                      {admins.map((admin) => (
+                        <SelectItem key={admin.user_id} value={admin.user_id}>
+                          {admin.full_name || "Sem nome"} ({admin.role === "super_admin" ? "Super Admin" : "Admin"})
                         </SelectItem>
                       ))}
                     </SelectContent>

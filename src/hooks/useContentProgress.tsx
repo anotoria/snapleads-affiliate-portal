@@ -110,7 +110,11 @@ export const useUpdateContentProgress = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      const updateData: Record<string, unknown> = {
+      const updateData: {
+        last_watched_at: string;
+        completed?: boolean;
+        progress_percent?: number;
+      } = {
         last_watched_at: new Date().toISOString(),
       };
 
