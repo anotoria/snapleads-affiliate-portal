@@ -52,7 +52,7 @@ export const useAdminRoles = () => {
         company_name: profileMap[role.user_id]?.company_name || null,
       }));
     },
-    enabled: isSuperAdmin,
+    enabled: isAdmin,
   });
 
   const addAdminMutation = useMutation({
